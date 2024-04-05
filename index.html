@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drone Admin Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC2Clw-VpnxB7VDVb1kgvfCDYyE32hB_hA&callback=initMap" async defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body class="antialiased bg-gray-200">
+  <div class="min-h-screen flex flex-col">
+    <!-- Header -->
+    <header class="bg-blue-600">
+      <div class="container mx-auto px-6 py-4">
+        <h1 class="text-white text-3xl font-bold text-center">Drone Admin Dashboard</h1>
+      </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="flex-grow container mx-auto px-4 sm:px-6 mt-6">
+      <!-- Grid wrapper -->
+      <div class="grid gap-4 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
+        <!-- Live Camera Feed -->
+        <div class="bg-white rounded-lg shadow p-4">
+          <h2 class="text-xl font-semibold mb-2">Live Camera</h2>
+          <div class="aspect-w-16 aspect-h-9">
+            <video id="camera" autoplay playsinline class="object-cover rounded-lg"></video>
+          </div>
+        </div>
+
+        <!-- Live Map -->
+        <div class="bg-white rounded-lg shadow p-4">
+          <h2 class="text-xl font-semibold mb-2">Live Map</h2>
+          <div id="map" style="height: 400px;"></div>
+        </div>
+      </div>
+
+      <!-- Second row -->
+      <div class="grid gap-4 mt-4 md:grid-cols-1 lg:grid-cols-3 xl:grid-cols-3">
+        <!-- Drone Status -->
+        <div class="bg-white rounded-lg shadow p-4">
+          <h2 class="text-xl font-semibold mb-2">Drone Status</h2>
+          <ul id="status-info" class="list-disc pl-5">
+            <li>Connection Status: <span id="connection-status" class="font-semibold">N/A</span></li>
+            <li>Battery Level: <span id="battery-level" class="font-semibold">N/A</span></li>
+            <li>GPS Coordinates: <span id="gps-coordinates" class="font-semibold">N/A</span></li>
+            <li>Altitude: <span id="altitude" class="font-semibold">N/A</span></li>
+            <li>Speed: <span id="speed" class="font-semibold">N/A</span></li>
+          </ul>
+        </div>
+
+        <!-- Alerts -->
+        <div class="bg-white rounded-lg shadow p-4 col-span-2">
+          <h2 class="text-xl font-semibold mb-2">Alerts</h2>
+          <ul id="alerts" class="max-h-56 overflow-y-auto list-disc pl-5">
+            <!-- Alert items will be dynamically added here -->
+          </ul>
+        </div>
+      </div>
+
+      <!-- Drone Selector -->
+      <div class="mt-4 bg-white rounded-lg shadow p-4">
+        <h2 class="text-xl font-semibold mb-2">Select a Drone</h2>
+        <select id="drone-selector" class="block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+          <option value="">Select a drone...</option>
+          <!-- Additional options will be dynamically added here -->
+        </select>
+      </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-600">
+      <div class="container mx-auto px-6 py-4">
+        <p class="text-white text-sm text-center">&copy; 2024 Drone Inc. All rights reserved.</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Replace 'YOUR_API_KEY' with your actual Google Maps API Key -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=ADD-HEREA&callback=initMap"></script>
+</body>
+</html>
