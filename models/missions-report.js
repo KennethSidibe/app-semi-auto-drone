@@ -1,219 +1,234 @@
-class MissionReport {
+import { db } from "./db-config.js";
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { addDoc, collection, doc, getFirestore, setDoc, getDocs, getDoc, updateDoc, deleteDoc, documentId, query as queryFirestore, where } from 'firebase/firestore';
+import { GeoPoint } from "firebase/firestore";
+
+
+export default class MissionReport {
     constructor(missionReportData) {
-        this.flightPath = missionReportData.flightPath;
-        this.logs = missionReportData.logs;
-        this.mappingsId = missionReportData.mappingsId;
-        this.photosId = missionReportData.photosId;
-        this.team = missionReportData.team;
-        this.videosId = missionReportData.videosId;
-        this.maxAltitude = missionReportData.maxAltitude;
-        this.controlMode = missionReportData.controlMode;
-        this.departure = missionReportData.departure;
-        this.destination = missionReportData.destination;
-        this.distanceTraveled = missionReportData.distanceTraveled;
-        this.droneId = missionReportData.droneId;
-        this.duration = missionReportData.duration;
-        this.lidarReadings = missionReportData.lidarReadings;
-        this.lowestAltitude = missionReportData.lowestAltitude;
-        this.lowestSpeed = missionReportData.lowestSpeed;
-        this.maxSpeed = missionReportData.maxSpeed;
-        this.signalStrength = missionReportData.signalStrength;
-        this.pilotId = missionReportData.pilotId;
+        this._flightPath = missionReportData.flightPath;
+        this._logs = missionReportData.logs;
+        this._mappingsId = missionReportData.mappingsId;
+        this._photosId = missionReportData.photosId;
+        this._team = missionReportData.team;
+        this._videosId = missionReportData.videosId;
+        this._maxAltitude = missionReportData.maxAltitude;
+        this._controlMode = missionReportData.controlMode;
+        this._departure = missionReportData.departure;
+        this._destination = missionReportData.destination;
+        this._distanceTraveled = missionReportData.distanceTraveled;
+        this._droneId = missionReportData.droneId;
+        this._duration = missionReportData.duration;
+        this._lidarReadings = missionReportData.lidarReadings;
+        this._lowestAltitude = missionReportData.lowestAltitude;
+        this._lowestSpeed = missionReportData.lowestSpeed;
+        this._maxSpeed = missionReportData.maxSpeed;
+        this._signalStrength = missionReportData.signalStrength;
+        this._pilotId = missionReportData.pilotId;
     }
 
     // --------------- GETTERS
 
     get flightPath() {
-        return this.flightPath;
+        return this._flightPath.path;
     }
 
     get logs() {
-        return this.logs;
+        return this._logs;
     }
 
     get mappingsId() {
-        return this.mappingsId;
+        return this._mappingsId;
     }
 
     get photosId() {
-        return this.photosId;
+        return this._photosId;
     }
 
     get team() {
-        return this.team;
+        return this._team;
     }
 
     get videosId() {
-        return this.videosId;
+        return this._videosId;
     }
 
     get maxAltitude() {
-        return this.maxAltitude;
+        return this._maxAltitude;
     }
 
     get controlMode() {
-        return this.controlMode;
+        return this._controlMode;
     }
 
     get departure() {
-        return this.departure;
+        return this._departure;
     }
 
     get destination() {
-        return this.destination;
+        return this._destination;
     }
 
     get distanceTraveled() {
-        return this.distanceTraveled;
+        return this._distanceTraveled;
     }
 
     get droneId() {
-        return this.droneId;
+        return this._droneId;
     }
 
     get duration() {
-        return this.duration;
+        return this._duration;
     }
 
     get lidarReadings() {
-        return this.lidarReadings;
+        return this._lidarReadings;
     }
 
     get lowestAltitude() {
-        return this.lowestAltitude;
+        return this._lowestAltitude;
     }
 
     get lowestSpeed() {
-        return this.lowestSpeed;
+        return this._lowestSpeed;
     }
 
     get maxSpeed() {
-        return this.maxSpeed;
+        return this._maxSpeed;
     }
 
     get signalStrength() {
-        return this.signalStrength;
+        return this._signalStrength;
     }
 
     get pilotId() {
-        return this.pilotId;
+        return this._pilotId;
     }
 
     // --------------- SETTERS
 
     set flightPath(value) {
-        this.flightPath = value;
+        this._flightPath.path = value;
     }
 
     set logs(value) {
-        this.logs = value;
+        this._logs = value;
     }
 
     set mappingsId(value) {
-        this.mappingsId = value;
+        this._mappingsId = value;
     }
 
     set photosId(value) {
-        this.photosId = value;
+        this._photosId = value;
     }
 
     set team(value) {
-        this.team = value;
+        this._team = value;
     }
 
     set videosId(value) {
-        this.videosId = value;
+        this._videosId = value;
     }
 
     set maxAltitude(value) {
-        this.maxAltitude = value;
+        this._maxAltitude = value;
     }
 
     set controlMode(value) {
-        this.controlMode = value;
+        this._controlMode = value;
     }
 
     set departure(value) {
-        this.departure = value;
+        this._departure = value;
     }
 
     set destination(value) {
-        this.destination = value;
+        this._destination = value;
     }
 
     set distanceTraveled(value) {
-        this.distanceTraveled = value;
+        this._distanceTraveled = value;
     }
 
     set droneId(value) {
-        this.droneId = value;
+        this._droneId = value;
     }
 
     set duration(value) {
-        this.duration = value;
+        this._duration = value;
     }
 
     set lidarReadings(value) {
-        this.lidarReadings = value;
+        this._lidarReadings = value;
     }
 
     set lowestAltitude(value) {
-        this.lowestAltitude = value;
+        this._lowestAltitude = value;
     }
 
     set lowestSpeed(value) {
-        this.lowestSpeed = value;
+        this._lowestSpeed = value;
     }
 
     set maxSpeed(value) {
-        this.maxSpeed = value;
+        this._maxSpeed = value;
     }
 
     set signalStrength(value) {
-        this.signalStrength = value;
+        this._signalStrength = value;
     }
 
     set pilotId(value) {
-        this.pilotId = value;
+        this._pilotId = value;
     }
 
 }
 
-class MissionReportGenerator {
+export class MissionReportGenerator {
     static generateRandomMissionReport() {
         const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const getRandomLatitude = () => getRandomNumber(-90, 90);
         const getRandomLongitude = () => getRandomNumber(-180, 180);
         const getRandomLogs = () => {
-            const commands = ['print location', 'print state', 'capture photos', 'capture images'];
-            let logs = {};
+            const commands = ['print location', 'print state', 'low battery', 'capture photos', 'capture images', 'buzzer triggered'];
+            let logs = [];
             for (let i = 0; i < 4; i++) {
-                logs[`logId${i}`] = commands[getRandomNumber(0, commands.length - 1)];
+                logs.push(commands[getRandomNumber(0, commands.length - 1)]);
             }
             return logs;
         };
 
         let flightPath = {
-            path: {
-                values: Array.from({ length: 4 }, () => ({
-                    latitude: getRandomLatitude(),
-                    longitude: getRandomLongitude(),
-                })),
-            },
+            path: 
+                Array.from({ length: 4 }, () => (new GeoPoint(
+                    getRandomLatitude(),
+                    getRandomLongitude(),
+                )))
         };
 
         let logs = getRandomLogs();
 
-        // Similar to logs, you can randomize mappingsId, photosId, videosId, and team
-        // Following is a simplified example for mappingsId:
-        let mappingsId = {
-            mapping1: 'mappingImageId1',
-            mapping2: 'mappingImageId2',
-            mapping3: 'mappingImageId3',
-            mapping4: 'mappingImageId4',
-        };
+        let mappingsId = [
+            'mappingImageId1',
+            'mappingImageId2',
+            'mappingImageId3',
+            'mappingImageId4'
+        ];
 
-        // Skipping detailed random generation for photosId, videosId, team for brevity
+        let photosId = [
+            'imageId1',
+            'imageId2',
+            'imageId3',
+            'imageId4'
+        ];
+
+        let videosId = [
+            'videoId1',
+            'videoId2',
+            'videoId3',
+            'videoId4'
+        ];
 
         let missionReport = {
             flightPath,
@@ -222,21 +237,22 @@ class MissionReportGenerator {
             // Skipping photosId, videosId, team for brevity
             maxAltitude: getRandomNumber(1, 5000),
             controlMode: getRandomNumber(0, 1) ? 'manual' : 'auto',
-            departure: {
-                latitude: getRandomLatitude(),
-                longitude: getRandomLongitude(),
-            },
-            destination: {
-                latitude: getRandomLatitude(),
-                longitude: getRandomLongitude(),
-            },
+            departure: new GeoPoint(
+                getRandomLatitude(),
+                getRandomLongitude(),
+            ),
+            destination: new GeoPoint(
+                getRandomLatitude(),
+                getRandomLongitude(),
+            ),
             distanceTraveled: getRandomNumber(1, 10000),
+            videosId : videosId,
+            photosId: photosId,
             droneId: `D-${getRandomNumber(1000, 9999)}`,
             duration: getRandomNumber(1000, 5000),
             lidarReadings: [getRandomNumber(1, 10) / 10, getRandomNumber(1, 10) / 10],
             lowestAltitude: getRandomNumber(1, 500),
             lowestSpeed: getRandomNumber(1, 50),
-            mappingsId: `M-${getRandomNumber(100, 999)}`,
             maxSpeed: getRandomNumber(10, 100),
             signalStrength: `S-${getRandomNumber(1, 100)}`,
             pilotId: `P-${getRandomNumber(1000, 9999)}`
@@ -246,95 +262,128 @@ class MissionReportGenerator {
     }
 }
 
-let randomMissionReport = MissionReportGenerator.generateRandomMissionReport();
-console.log(JSON.stringify(randomMissionReport, null, 2));
+// let randomMissionReport = MissionReportGenerator.generateRandomMissionReport();
+// console.log(JSON.stringify(randomMissionReport, null, 2));
 
     // WRITE
-    async function Insert_missionReport(missionReportData) {
+    export async function InsertMissionReport(missionReportData) {
         try {
           const docRef = await addDoc(collection(db, "missionReports"), missionReportData);
           console.log("Mission Report written with ID: ", docRef.id);
+          return docRef.id;
         } catch (error) {
-          console.error("Error adding mission report: ", error);
+          console.error("Error adding mission report: ", error.stack);
+          return '';
         }
     }
     // WRITE
 
     // READ 
-    async function Get_missionReportById(reportId) {
+    export async function GetMissionReportById(reportId) {
         try {
           const docRef = doc(db, "missionReports", reportId);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
-            console.log("Mission Report data:", docSnap.data());
             return docSnap.data();
           } else {
             console.log("No such mission report!");
             return null;
           }
         } catch (error) {
-          console.error("Error fetching mission report: ", error);
+          console.error("Error fetching mission report: ", error.stack);
           return null;
         }
     }
     // READ 
 
-    // UPDATE
-    async function Update_missionReport(reportId, updatedData) {
+    async function doesMissionReportExists(reportId) {
         try {
+          const missionReportRef = doc(db, "missionReports", reportId);
+      
+          const missionReportSnapshot = await getDoc(missionReportRef);
+      
+          return missionReportSnapshot.exists();
+        } catch (error) {
+          console.error("Error checking for mission report existence: ", error.stack);
+          return false;
+        }
+      }
+
+    // UPDATE
+    export async function UpdateMissionReport(reportId, updatedData) {
+        try {
+            if(!await doesMissionReportExists(reportId)) {
+                console.log(`Report id provided does not exist`);
+                return false;
+            }
           const reportRef = doc(db, "missionReports", reportId);
           await updateDoc(reportRef, updatedData);
           console.log("Mission Report successfully updated");
+          return true;
         } catch (error) {
-          console.error("Error updating mission report: ", error);
+          console.error("Error updating mission report: ", error.stack);
+          return false;
         }
     }
     // UPDATE
 
     // DELETE 
-    async function Delete_missionReport(reportId) {
+    export async function DeleteMissionReport(reportId) {
         try {
+            if(! await doesMissionReportExists(reportId)) {
+                console.log(`Report id provided does not exist`);
+                return false;
+            }
           await deleteDoc(doc(db, "missionReports", reportId));
           console.log("Mission Report successfully deleted");
+          return true;
         } catch (error) {
-          console.error("Error deleting mission report: ", error);
+          console.error("Error deleting mission report: ", error.stack);
+          return false;
         }
     }
     // DELETE 
 
+/*
+
 let flightPath = {
-    path : {
-        values : [
-            {latitude:0, longitude: 0},
-            {latitude:0, longitude: 0},
-            {latitude:0, longitude: 0},
-            {latitude:0, longitude: 0}
+    path : [
+            new Geopoint(0, 0),
+            new Geopoint(0, 0),
+            new Geopoint(0, 0),
+            new Geopoint(0, 0),
         ]
     }
 }
-let logs = {
-    skdjfhw83742 : 'print location',
-    skdjf324ads2 : 'print state',
-    jskn87432 : 'capture photos',
-    ksjlkfs9283 : 'capture images',
+
+
+
+
+let logs = [
+    'print location',
+    'print state',
+    'capture photos',
+    'capture images'
+]
+
 }
-let mappingsId = {
-    sheflke9823 : 'mappingImageId',
-    lsdjf8324 : 'mappingImageId2',
-    klsjkf3948 : 'mappingImageId3',
-    lsjhfdskl834 : 'mappingImageId4',
-}
-let photosId = {
-    lsdfhsk8435 : 'imageId',
-    sldnfk934 : 'ImageId2',
-    slhf834 : 'imageId3',
-    lksdfks3432 : 'imageId4',
-}
-let videosId = {
-    sdlfsd : 'videoId',
-    sldmfks3 : 'videoId2',
-    sldfw0 : 'videoId3',
-    klsdf912 : 'videoId4',
+let mappingsId = [
+    'mappingImageId',
+    'mappingImageId2',
+    'mappingImageId3',
+    'mappingImageId4',
+]
+let photosId = [
+    'imageId',
+    'ImageId2',
+    'imageId3',
+    'imageId4',
+]
+let videosId = [
+    'videoId',
+    'videoId2',
+    'videoId3',
+    'videoId4',
 }
 let team = {
     sldfsdfsd: {
@@ -375,5 +424,7 @@ let droneReports = {
     signalStrength : '',
     pilotId : ''
 }
+
+*/
 
 // MISSION-REPORTS

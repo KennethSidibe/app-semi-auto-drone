@@ -1,186 +1,189 @@
-import { log } from "console";
+import { db } from "./db-config.js";
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { addDoc, collection, doc, getFirestore, setDoc, getDocs, getDoc, updateDoc, deleteDoc, documentId, query as queryFirestore, where } from 'firebase/firestore';
+import { GeoPoint } from "firebase/firestore";
 
 // DRONES
 
-class Drone {
+export default class Drone {
     constructor(droneData) {
-        this.flight = droneData.flight;
-        this.identification = droneData.identification;
-        this.payload = droneData.payload;
-        this.specifications = droneData.specifications;
+        this._flight = droneData.flight;
+        this._identification = droneData.identification;
+        this._payload = droneData.payload;
+        this._specifications = droneData.specifications;
     }
 
     // --------------- GETTERS
 
     // Flight Getters
     get Flight() {
-        return this.flight;
+        return this._flight;
     }
 
     get FlightAltitude() {
-        return this.flight.altitude.value;
+        return this._flight.altitude.value;
     }
 
     get BatteryLevel() {
-        return this.flight.batteryLevel.value;
+        return this._flight.batteryLevel.value;
     }
 
     get flightEndAt() {
-        return this.flight.endAt.date;
+        return this._flight.endAt.date;
     }
 
     get flightLocation() {
-        return this.flight.location;
+        return this._flight.location;
     }
 
     get orientation() {
-        return this.flight.orientation.value;
+        return this._flight.orientation.value;
     }
     
 
     // Pilot 
     get pilot() {
-        return this.flight.pilot;
+        return this._flight.pilot;
     }
     get pilotName() {
-        return this.flight.pilot.name;
+        return this._flight.pilot.name;
     }
     get pilotId() {
-        return this.flight.pilot.id;
+        return this._flight.pilot.id;
     }
     // Pilot 
 
     // Sensors
     get sensors() {
-        return this.flight.sensors;
+        return this._flight.sensors;
     }
     get buzzer() {
-        return this.flight.sensors.buzzer;
+        return this._flight.sensors.buzzer;
     }
     get isBuzzerOn() {
-        return this.flight.sensors.buzzer.state;
+        return this._flight.sensors.buzzer.state;
     }
     get lidar() {
-        return this.flight.sensors.lidar;
+        return this._flight.sensors.lidar;
     }
     get ultrasonic() {
-        return this.flight.sensors.ultrasonic;
+        return this._flight.sensors.ultrasonic;
     }
     // Sensors
 
     get speed() {
-        return this.flight.speed.value;
+        return this._flight.speed.value;
     }
 
     get flightStartedAt() {
-        return this.flight.startedAt.date;
+        return this._flight.startedAt.date;
     }
     // Flight Getters
 
     // Identification Getters
     get identification() {
-        return this.identification;
+        return this._identification;
     }
 
     get pilotInfo() {
-        return this.identification.pilot;
+        return this._identification.pilot;
     }
 
     get serialNumber() {
-        return this.identification.serialNumber.value;
+        return this._identification.serialNumber.value;
     }
     // Identification Getters
 
 
     // Payload Getters
     get payload() {
-        return this.payload;
+        return this._payload;
     }
 
     get cargo() {
-        return this.payload.cargo;
+        return this._payload.cargo;
     }
     get payloadDescription() {
-        return this.payload.cargo.description;
+        return this._payload.cargo.description;
     }
     get payloadDimensions() {
-        return this.payload.cargo.dimensions;
+        return this._payload.cargo.dimensions;
     }
     get payloadName() {
-        return this.payload.cargo.item;
+        return this._payload.cargo.item;
     }
     get payloadWeight() {
-        return this.payload.cargo.weight;
+        return this._payload.cargo.weight;
     }
     // Payload Getters
 
 
     // Specifications Getters
     get specifications() {
-        return this.specifications;
+        return this._specifications;
     }
     get specsBatteryCapacity() {
-        return this.specifications.battery.capacity;
+        return this._specifications.battery.capacity;
     }
     get specsBatteryLevel() {
-        return this.specifications.battery.level;
+        return this._specifications.battery.level;
     }
     get specsFlightModes() {
-        return this.specifications.flightModes; 
+        return this._specifications.flightModes; 
     }
 
     get specsMaxAltitude() {
-        return this.specifications.maxAltitude;
+        return this._specifications.maxAltitude;
     }
 
     get specsMaxSpeed() {
-        return this.specifications.maxSpeed; 
+        return this._specifications.maxSpeed; 
     }
 
     get specsSensors() {
-        return this.specifications.sensors;
+        return this._specifications.sensors;
     }
 
     get specsSoftVersion() {
-        return this.specifications.softVersion;
+        return this._specifications.softVersion;
     }
     // CAMERA SPECS
     get cameraResolution() {
-        return `${this.specifications.sensors.camera.widthResolution}X${this.specifications.sensors.camera.heightResolution}`
+        return `${this._specifications.sensors.camera.widthResolution}X${this._specifications.sensors.camera.heightResolution}`
     }
     get cameraHealth() {
-        return this.specifications.sensors.camera.health;
+        return this._specifications.sensors.camera.health;
     }
     // CAMERA SPECS
 
     // LIDAR SPECS
     get lidarFOV() {
-        return this.specifications.sensors.lidar.FOV;
+        return this._specifications.sensors.lidar.FOV;
     }
     get lidarDetectionRange() {
-        return this.specifications.sensors.lidar.detectionRange;
+        return this._specifications.sensors.lidar.detectionRange;
     }
     get lidarScanPattern() {
-        return this.specifications.sensors.lidar.scanPattern;
+        return this._specifications.sensors.lidar.scanPattern;
     }
     get lidarHealth() {
-        return this.specifications.sensors.lidar.health;
+        return this._specifications.sensors.lidar.health;
     }
     // LIDAR SPECS
 
     // ultrasonic SPECS
     get ultraSonicMaxDistance() {
-        return this.specifications.sensors.ultrasonic.maxDistance;
+        return this._specifications.sensors.ultrasonic.maxDistance;
     }
     get ultraSonicHealth() {
-        return this.specifications.sensors.ultrasonic.health;
+        return this._specifications.sensors.ultrasonic.health;
     }
 
     // LIDAR SPECS
 
 
     get specsWeight() {
-        return this.specifications.weight; 
+        return this._specifications.weight; 
     }
     // Specifications Getters
 
@@ -190,73 +193,76 @@ class Drone {
     // --------------- SETTERS
     // Flight Setters
     setFlight(flightData) {
-        this.flight = flightData;
+        this._flight = flightData;
     }
 
     setFlightAltitude(value) {
-        this.flight.altitude.value = value;
+        this._flight.altitude.value = value;
     }
 
     setBatteryLevel(value) {
-        this.flight.batteryLevel.value = value;
+        this._flight.batteryLevel.value = value;
     }
 
     setFlightEndAt(date) {
-        this.flight.endAt.date = date;
+        this._flight.endAt.date = date;
     }
 
     setFlightLocation(latitude, longitude) {
-        this.flight.location.latitude = latitude;
-        this.flight.location.longitude = longitude;
+        this._flight.location.latitude = latitude;
+        this._flight.location.longitude = longitude;
     }
 
     setOrientation(value) {
-        this.flight.orientation.value = value;
+        this._flight.orientation.value = value;
     }
 
     setPilot(id, name) {
-        this.flight.pilot.id = id;
-        this.flight.pilot.name = name;
+        this._flight.pilot.id = id;
+        this._flight.pilot.name = name;
     }
 
     setSensors(sensors) {
-        this.flight.sensors = sensors;
+        this._flight.sensors = sensors;
     }
 
     setSpeed(value) {
-        this.flight.speed.value = value;
+        this._flight.speed.value = value;
     }
 
     setFlightStartedAt(date) {
-        this.flight.startedAt.date = date;
+        this._flight.startedAt.date = date;
     }
 
     // Identification Setters
     setIdentification(identification) {
-        this.identification = identification;
+        this._identification = identification;
     }
 
     setPilotInfo(name, userId) {
-        this.identification.pilot.name = name;
-        this.identification.pilot.userId = userId;
+        this._identification.pilot.name = name;
+        this._identification.pilot.userId = userId;
+    }
+    set pilotName(value) {
+        this._identification.pilot.name = value;
     }
 
     setSerialNumber(value) {
-        this.identification.serialNumber.value = value;
+        this._identification.serialNumber.value = value;
     }
 
     // Payload Setters
     setPayload(payload) {
-        this.payload = payload;
+        this._payload = payload;
     }
 
     setCargo(cargo) {
-        this.payload.cargo = cargo;
+        this._payload.cargo = cargo;
     }
 
     // Specifications Setters
     setSpecifications(specifications) {
-        this.specifications = specifications;
+        this._specifications = specifications;
     }
 
     // ---------------- SETTERS
@@ -272,10 +278,10 @@ class Drone {
             endAt: { 
                 date: new Date(new Date().getTime() + 60 * 60 * 1000)
             },
-            location: {
-                latitude: getRandomNumber(-90, 90),
-                longitude: getRandomNumber(-180, 180)
-            },
+            location: new GeoPoint(
+                getRandomNumber(-90, 90),
+                getRandomNumber(-180, 180)
+            ),
             orientation: { value: getRandomNumber(0, 360) },
             pilot: {
                 id: `P-${getRandomNumber(1000, 9999)}`,
@@ -393,27 +399,28 @@ class Drone {
 
 }
 
-let randomDrone = Drone.generateRandomDrone();
-console.log(`Random Drone obj : ${JSON.stringify(randomDrone, null, 2)}`);
+// let randomDrone = Drone.generateRandomDrone();
+// console.log(`Random Drone obj : ${JSON.stringify(randomDrone, null, 2)}`);
 
     // WRITE
-    async function InsertDrone(droneData) {
+    export async function InsertDrone(droneData) {
         try {
           const docRef = await addDoc(collection(db, "drones"), droneData);
           console.log("Document written with ID: ", docRef.id);
+          return docRef.id;
         } catch (e) {
-          console.error("Error adding document: ", e);
+          console.error("Error adding document: ", e.stack);
+          return '';
         }
       }
     //   WRITE
 
     // READ
-    async function GetDroneById(droneId) {
+    export async function GetDroneById(droneId) {
         const droneRef = doc(db, "drones", droneId);
         try {
           const docSnap = await getDoc(droneRef);
           if (docSnap.exists()) {
-            console.log("Document data:", docSnap.data());
             return docSnap.data(); // Returns the drone data
           } else {
             // doc.data() will be undefined in this case
@@ -421,34 +428,63 @@ console.log(`Random Drone obj : ${JSON.stringify(randomDrone, null, 2)}`);
             return null;
           }
         } catch (e) {
-          console.error("Error fetching document: ", e);
+          console.error("Error fetching document: ", e.stack);
           return null;
         }
     }
     // READ
 
     // DELETE
-    async function DeleteDrone(droneId) {
+    export async function deleteDrone(droneId) {
         try {
+          let droneExist = await doesDroneExists(droneId);
+          if(!droneExist) {
+            return false;
+          }
           await deleteDoc(doc(db, "drones", droneId));
           console.log("Document successfully deleted!");
+          return true;
         } catch (error) {
-          console.error("Error removing document: ", error);
+          console.error("Error removing document: ", error.stack);
+          return false;
+        }
+    }
+    async function doesDroneExists(droneId) {
+        try {
+          const dronesCollectionRef = collection(db, "drones");
+      
+          const q = queryFirestore(dronesCollectionRef, where("__name__", "==", droneId));
+      
+          const querySnapshot = await getDocs(q);
+      
+          // If the querySnapshot has any documents, the ID exists
+          return !querySnapshot.empty;
+        } catch (error) {
+          console.error("Error checking document ID:", error.stack);
+          return false; // In case of error, return false
         }
     }
     // DELETE
 
     // UPDATE
-    async function UpdateDrone(droneId, updatedData) {
+   export async function UpdateDrone(droneId, updatedData) {
         try {
+            if(! await doesDroneExists(droneId)) {
+                return false;
+            }
           const droneRef = doc(db, "drones", droneId);
           await updateDoc(droneRef, updatedData);
           console.log("Document successfully updated!");
+          return true;
         } catch (error) {
-          console.error("Error updating document: ", error);
+          console.error("Error updating document: ", error.stack);
+          return false;
         }
     }
     // UPDATE
+
+
+/* 
 
 let flight = {
     altitude: {value: 0},
@@ -549,5 +585,7 @@ let drones = {
     sdlfsds: drone,
     ldsfskdfmdsk: drone,
 };
+
+*/
 
 // DRONES

@@ -1,89 +1,113 @@
+import { db } from "./db-config.js";
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { addDoc, collection, doc, getFirestore, setDoc, getDocs, getDoc, updateDoc, deleteDoc, documentId, query as queryFirestore, where } from 'firebase/firestore';
+import { GeoPoint } from "firebase/firestore";
+
+
 // USERS
 
     // WRITE
-    async function Insert_user(userData) {
-        try {
-          const docRef = await addDoc(collection(db, "users"), userData);
-          console.log("User added with ID: ", docRef.id);
-        } catch (error) {
-          console.error("Error adding user: ", error);
-        }
+    export async function InsertUser(userData) {
+      try {
+        const docRef = await addDoc(collection(db, "users"), userData);
+        console.log("User added with ID: ", docRef.id);
+        return docRef.id;
+      } catch (error) {
+        console.error("Error adding user: ", error);
+        return '';
+      }
     }
     // WRITE
 
     // READ
-    async function Get_userById(userId) {
-        try {
-          const docRef = doc(db, "users", userId);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            console.log("User data:", docSnap.data());
-            return docSnap.data();
-          } else {
-            console.log("No such user found!");
-            return null;
-          }
-        } catch (error) {
-          console.error("Error fetching user: ", error);
-          return null;
-        }
+    export async function GetUserById(userId) {
+      try {
+        const docRef = doc(db, "users", userId);
+        const docSnap = await getDoc(docRef);
+        return docSnap.exists() ? docSnap.data() : null;
+      } catch (error) {
+        console.error("Error fetching user: ", error);
+        return null;
+      }
     }
     // READ
 
+    async function checkIfUserExists(userId) {
+      const userRef = doc(db, "users", userId);
+      try {
+        const userSnap = await getDoc(userRef);
+        return userSnap.exists();
+      } catch (error) {
+        console.error("Error checking user existence: ", error);
+        return false;
+      }
+    }
+
     // UPDATE
-    async function Update_user(userId, updatedData) {
-        try {
-          const userRef = doc(db, "users", userId);
-          await updateDoc(userRef, updatedData);
-          console.log("User successfully updated");
-        } catch (error) {
-          console.error("Error updating user: ", error);
+    export async function UpdateUser(userId, updatedData) {
+      try {
+        if (!await checkIfUserExists(userId)) {
+          console.log(`User does not exist`);
+          return false;
         }
+        const userRef = doc(db, "users", userId);
+        await updateDoc(userRef, updatedData);
+        return true;
+      } catch (error) {
+        console.error("Error updating user: ", error);
+        return false;
+      }
     }
     // UPDATE
 
     // DELETE
-    async function Delete_user(userId) {
-        try {
-          await deleteDoc(doc(db, "users", userId));
-          console.log("User successfully deleted");
-        } catch (error) {
-          console.error("Error deleting user: ", error);
+    export async function DeleteUser(userId) {
+      try {
+        if (!await checkIfUserExists(userId)) {
+          console.log(`User does not exist`);
+          return false;
         }
+        await deleteDoc(doc(db, "users", userId));
+        return true;
+      } catch (error) {
+        console.error("Error deleting user: ", error);
+        return false;
+      }
     }
     // DELETE
 
-class User {
+
+export default class User {
     constructor(userData) {
-        this.email = userData.email;
-        this.firstName = userData.firstName;
-        this.lastName = userData.lastName;
+        this._email = userData.email;
+        this._firstName = userData.firstName;
+        this._lastName = userData.lastName;
     }
 
     // Getters
     get email() {
-        return this.email;
+        return this._email;
     }
 
     get firstName() {
-        return this.firstName;
+        return this._firstName;
     }
 
     get lastName() {
-        return this.lastName;
+        return this._lastName;
     }
 
     // Setters
     set email(value) {
-        this.email = value;
+        this._email = value;
     }
 
     set firstName(value) {
-        this.firstName = value;
+        this._firstName = value;
     }
 
     set lastName(value) {
-        this.lastName = value;
+        this._lastName = value;
     }
 
 
@@ -112,9 +136,10 @@ class User {
   }
 }
 
-let randomUser = User.generateRandomUser();
-console.log(randomUser);
+// let randomUser = User.generateRandomUser();
+// console.log(randomUser);
     
+/*
 
 let user = {
     email: 'ken@ken.com',
@@ -127,5 +152,6 @@ let users = {
     dslfnskd21342: user,
     dskjfsld: user
 }
+*/
 
 // USERS

@@ -1,6 +1,11 @@
+import { db } from "./db-config.js";
+import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { addDoc, collection, updateDoc, deleteDoc,  doc, getFirestore, setDoc, getDocs, getDoc, documentId, query as queryFirestore, where } from 'firebase/firestore';
+import { GeoPoint } from "firebase/firestore";
+
 // MISSIONS
 
-class Mission {
+export default class Mission {
     constructor(missionData) {
         this._droneId = missionData.droneId;
         this._endAt = missionData.endAt;
@@ -16,77 +21,78 @@ class Mission {
     // --------------- GETTERS
 
     get droneId() {
-        return this.droneId;
+        return this._droneId;
     }
 
     get endAt() {
-        return this.endAt;
+        return this._endAt;
     }
 
     get location() {
-        return this.location;
+        return this._location;
     }
 
     get pilotId() {
-        return this.pilotId;
+        return this._pilotId;
     }
 
     get startedAt() {
-        return this.startedAt;
+        return this._startedAt;
     }
 
     get teamId() {
-        return this.teamId;
+        return this._teamId;
     }
 
     get teamLeaderId() {
-        return this.teamLeaderId;
+        return this._teamLeaderId;
     }
 
     get type() {
-        return this.type;
+        return this._type;
     }
 
     get urgency() {
-        return this.urgency;
+        return this._urgency;
     }
 
     // --------------- SETTERS
 
     set droneId(value) {
-        this.droneId = value;
+        this._droneId = value;
     }
 
     set endAt(value) {
-        this.endAt = value;
+        this._endAt = value;
     }
 
-    set location(value) {
-        this.location = value;
+    set location(latitude) {
+        // accepts a geopoint 
+        this._location = value;
     }
 
     set pilotId(value) {
-        this.pilotId = value;
+        this._pilotId = value;
     }
 
     set startedAt(value) {
-        this.startedAt = value;
+        this._startedAt = value;
     }
 
     set teamId(value) {
-        this.teamId = value;
+        this._teamId = value;
     }
 
     set teamLeaderId(value) {
-        this.teamLeaderId = value;
+        this._teamLeaderId = value;
     }
 
     set type(value) {
-        this.type = value;
+        this._type = value;
     }
 
     set urgency(value) {
-        this.urgency = value;
+        this._urgency = value;
     }
 
     // METHODS
@@ -98,10 +104,10 @@ class Mission {
         const mission = {
             droneId: `D-${getRandomNumber(1000, 9999)}`,
             endAt: new Date(new Date().getTime() + getRandomNumber(1, 24) * 60 * 60 * 1000),
-            location: {
-                latitude: getRandomNumber(-90, 90),
-                longitude: getRandomNumber(-180, 180),
-            },
+            location: new GeoPoint(
+                getRandomNumber(-90, 90),
+                getRandomNumber(-180, 180)
+            ),
             pilotId: `P-${getRandomNumber(1000, 9999)}`,
             startedAt: new Date(),
             teamId: `T-${getRandomNumber(100, 999)}`,
@@ -110,68 +116,93 @@ class Mission {
             urgency: urgencies[getRandomNumber(0, urgencies.length - 1)],
         };
 
-        return new Mission(mission);
+        return mission;
     }
     // METHODS
 }
 
-const randomMission = Mission.generateRandomMission();
-console.log(randomMission);
+// const randomMission = Mission.generateRandomMission();
+// console.log(randomMission);
 
 
     // WRITE
-    async function Insert_mission(missionData) {
+    export async function InsertMission(missionData) {
         try {
           const docRef = await addDoc(collection(db, "missions"), missionData);
           console.log("Mission added with ID: ", docRef.id);
+          return docRef.id;
         } catch (error) {
-          console.error("Error adding mission: ", error);
+          console.error("Error adding mission: ", error.stack);
+          return '';
         }
     } 
     // WRITE 
 
     // READ
-    async function Get_missionById(missionId) {
+    export async function GetMissionById(missionId) {
         try {
           const docRef = doc(db, "missions", missionId);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
-            console.log("Mission data:", docSnap.data());
             return docSnap.data();
           } else {
             console.log("No such mission found!");
             return null;
           }
         } catch (error) {
-          console.error("Error fetching mission: ", error);
+          console.error("Error fetching mission: ", error.stack);
           return null;
         }
     }
     // READ
 
-    // UPDATE 
-    async function Update_mission(missionId, updatedData) {
+    async function checkIfMissionExists(missionId) {
         try {
+          const missionRef = doc(db, "missions", missionId);
+      
+          const missionSnapshot = await getDoc(missionRef);
+      
+          return missionSnapshot.exists() === true ? true : false;
+        } catch (error) {
+          console.error("Error checking for mission existence: ", error.stack);
+          return false; // Handle the error as appropriate for your application
+        }
+      }
+
+    // UPDATE 
+    export async function UpdateMission(missionId, updatedData) {
+        try {
+            if(! await checkIfMissionExists(missionId)) {
+                return false;
+            }
           const missionRef = doc(db, "missions", missionId);
           await updateDoc(missionRef, updatedData);
           console.log("Mission successfully updated");
+          return true;
         } catch (error) {
-          console.error("Error updating mission: ", error);
+          console.error("Error updating mission: ", error.stack);
+          return false;
         }
     }
     // UPDATE 
 
     // DELETE
-    async function Delete_mission(missionId) {
+    export async function DeleteMission(missionId) {
         try {
+            if(! await checkIfMissionExists(missionId)) {
+                return false;
+            }
           await deleteDoc(doc(db, "missions", missionId));
           console.log("Mission successfully deleted");
+          return true;
         } catch (error) {
-          console.error("Error deleting mission: ", error);
+          console.error("Error deleting mission: ", error.stack);
+          return false;
         }
     }
     // DELETE
 
+/*
 let mission = {
     droneId : '',
     endAt : '',
@@ -190,5 +221,7 @@ let missions = {
     ldskfsdew: mission,
     dlskfskd: mission
 }
+
+*/
 
 // MISSIONS
