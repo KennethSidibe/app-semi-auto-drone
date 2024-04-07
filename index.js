@@ -13,6 +13,41 @@ import { v4 as uuidv4 } from 'uuid';
 import { createServer } from "http";
 import { Server } from "socket.io";
 
+// MODELS IMPORT
+
+import Drone from "./models/drones.js";
+import { InsertDrone, deleteDrone, GetDroneById, UpdateDrone } from "./models/drones.js";
+
+import MissionReport from "./models/missions-report.js";
+import { InsertMissionReport, GetMissionReportById, UpdateMissionReport, DeleteMissionReport, MissionReportGenerator } from "./models/missions-report.js";
+
+import Mission from "./models/missions.js";
+import { InsertMission, GetMissionById, UpdateMission, DeleteMission } from "./models/missions.js";
+
+import Team from "./models/teams.js";
+import { InsertTeam, GetTeamById, UpdateTeam, DeleteTeam, teamGenerator } from "./models/teams.js";
+
+import User from "./models/users.js";
+import { InsertUser, GetUserById, DeleteUser, UpdateUser } from "./models/users.js";
+
+// MODELS IMPORT
+
+// let randomUser = User.generateRandomUser();
+// console.log('random user: ', randomUser);
+
+// let myTeam = teamGenerator();
+// console.log('random Team :', myTeam);
+
+// const randomMission = Mission.generateRandomMission();
+// console.log('random Mission: ', randomMission);
+
+// let randomMissionReport = MissionReportGenerator.generateRandomMissionReport();
+// console.log('random Mission Report: ', randomMissionReport);
+
+// let randomDrone = Drone.generateRandomDrone();
+// console.log(`Random Drone obj : ${JSON.stringify(randomDrone, null, 2)}`);
+
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const port = 3000;
 
@@ -32,14 +67,11 @@ const db = getFirestore(firebaseApp);
 const auth = getAuth(firebaseApp);
 // Firebase config 
 
-
-
 const app = express();
 const server = createServer(app); 
 const io = new Server(server);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
-
 
 
 server.listen(port, (req, res) => {
@@ -52,6 +84,369 @@ server.listen(port, (req, res) => {
 app.get("/", async (req, res) => {
   res.render("home.ejs");
 });
+
+// TEST MISSIONS REPORTS CRUD
+app.get('/fake-mission-report', async (req, res) => {
+  console.log('Inserting mission report into db');
+  let randomMissionReport = MissionReportGenerator.generateRandomMissionReport();
+  try {
+    let docRef = await InsertMissionReport(randomMissionReport);
+    console.log(`Doc ref : ${docRef}`);
+    if(typeof docRef === 'string' && docRef.length > 0) {
+      res.send('<h1>Mission Report inserted successfully with ID: ' + docRef + '</h1>');
+      return;
+    }
+    res.send('<h1>Mission Report failed to insert!</h1>');
+    return;
+  } catch (error) {
+    res.send('<h1>Mission Report failed to insert!</h1>');
+    return;
+  }
+});
+
+app.get('/read-fake-mission-report', async (req, res) => {
+  let reportId = '0qyVt6xmAxWgOfi5egvQ'; // Use a real mission report ID here
+  try {
+    let missionReportData = await GetMissionReportById(reportId);
+    if (missionReportData) {
+      console.log(`Mission Report Data: ${JSON.stringify(missionReportData, null, 2)}`);
+      res.send('<h1>Mission Report Read successfully</h1>');
+    } else {
+      res.send('<h1>Mission Report not found!</h1>');
+    }
+  } catch (error) {
+    res.send('<h1>Error reading Mission Report</h1>');
+  }
+});
+
+app.get('/update-fake-mission-report', async (req, res) => {
+  let reportId = 'ntTg49t4u4qtLaBsdkg6';
+  let updateData = MissionReportGenerator.generateRandomMissionReport();
+  updateData.logs.push('Crash FAILURE');
+  try {
+    let didUpdateWork = await UpdateMissionReport(reportId, updateData);
+    if(didUpdateWork) {
+      res.send('<h1>Mission Report updated successfully</h1>');
+      return;
+    }
+    res.send('<h1>Error updating Mission Report</h1>');
+    return;
+  } catch (error) {
+    res.send('<h1>Error updating Mission Report</h1>');
+  }
+});
+
+app.get('/delete-fake-mission-report', async (req, res) => {
+  let reportId = 'ntTg49t4u4qtLaBsdkg6'; // Use a real mission report ID here
+  try {
+    let didDeletewWork = await DeleteMissionReport(reportId);
+    if(didDeletewWork) {
+      res.send('<h1>Mission Report deleted successfully</h1>');
+      return;
+    }
+    res.send('<h1>Error deleting Mission Report</h1>');
+    return;
+  } catch (error) {
+    res.send('<h1>Error deleting Mission Report</h1>');
+  }
+});
+// TEST MISSIONS REPORTS CRUD
+
+// TEST DRONES CRUD
+
+app.get('/fake-drone', async(req, res) => {
+  console.log(`Inserting drone into db`);
+  let randomDrone = Drone.generateRandomDrone();
+  let newDrone = await InsertDrone(randomDrone);
+  if(typeof newDrone === 'string' && newDrone.length > 0) {
+    res.send('<h1>Drone inserted successfully</h1>');
+    return;
+  }
+  res.send('<h1>Drone failed to insert!</h1>');
+  res.redirect('/');
+  return;
+
+}); 
+
+app.get('/read-fake-drone', async(req, res) => {
+  let droneId = 'PBn21gHNDnnzoGdJYou5';
+  let drone = await GetDroneById(droneId);
+  let droneObj = new Drone(drone);
+  console.log(`Drone Altitude : ${JSON.stringify(droneObj.flightLocation, null, 2)}`);
+  if(drone !== null) {
+    res.send(`
+    <h1>Drone Read successfully</h1>
+    `);
+    return;
+  }
+  res.send('<h1>Drone failed to read!</h1>');
+  return;
+}); 
+
+
+
+app.get('/update-fake-drone', async(req, res) => {
+  console.log(`Reading drone with id: `);
+  let droneId = 'PBn21gHNDnnzoGdJYou5';
+  let newDrone = Drone.generateRandomDrone();
+  newDrone.identification.pilot.name = 'Updated Pilot Name';
+  let didUpdateWork = await UpdateDrone(droneId, newDrone);
+  if(didUpdateWork) {
+    res.send(`
+    <h1>Drone Update worked, updateValue : ${didUpdateWork}</h1>`);
+    console.log(`Drone data: ${JSON.stringify(newDrone, null, 2)}`);
+    console.log(`Drone boolean: ${JSON.stringify(didUpdateWork, null, 2)}`);
+
+    return;
+  }
+  res.send('<h1>Drone failed to update!</h1>');
+  res.redirect('/');
+  return;
+}); 
+
+app.get('/delete-fake-drone', async(req, res) => {
+  let droneId = 'HyLm3qX5NhxsfN9eotWO';
+  let didDeletewWork = await deleteDrone(droneId);
+  if(didDeletewWork) {
+    res.send(`
+    <h1>Drone delete worked, deleteFlag : ${didDeletewWork}</h1>`);
+    return;
+  }
+  res.send('<h1>Drone failed to delete!</h1>');
+  return;
+}); 
+
+// TEST DRONES CRUD
+
+// TEST MISSIONS CRUD
+app.get('/fake-mission', async (req, res) => {
+  console.log('Inserting mission into db');
+  let randomMission = Mission.generateRandomMission();
+  try {
+    let docRef = await InsertMission(randomMission);
+    if(typeof docRef === 'string' && docRef.length > 0) {
+      console.log(`Mission inserted with ID: ${docRef}`);
+      res.send(`<h1>Mission inserted Successfully! ID: ${docRef}</h1>`);
+      return;
+    }
+    res.send('<h1>Mission failed to insert!</h1>');
+    return;
+  } catch (error) {
+    console.error('Error inserting mission: ', error);
+    res.send('<h1>Mission failed to insert!</h1>');
+  }
+});
+
+app.get('/read-fake-mission', async (req, res) => {
+  let missionId = 'wzXY0f3XzxZa4nN3rwZ5'; // Use a real mission ID here
+  try {
+    let missionData = await GetMissionById(missionId);
+    if (missionData) {
+      console.log(`Mission data: ${JSON.stringify(missionData, null, 2)}`);
+      res.send('<h1>Mission read successfully</h1>');
+      return;
+    } else {
+      res.send('<h1>Mission not found!</h1>');
+      return;
+    }
+  } catch (error) {
+    console.error('Error reading mission: ', error);
+    res.send('<h1>Error reading mission</h1>');
+    return;
+  }
+});
+
+app.get('/update-fake-mission', async (req, res) => {
+  let missionId = 'wzXY0f3XzxZa4nN3rwZ5';
+  let newMissionData = Mission.generateRandomMission();
+  newMissionData.type = 'Updated Type';
+  try {
+    let didUpdateWork = await UpdateMission(missionId, newMissionData);
+    if(didUpdateWork) {
+      console.log(`Mission updated with data: ${JSON.stringify(newMissionData, null, 2)}`);
+      res.send('<h1>Mission updated successfully</h1>');
+      return;
+    }
+    res.send('<h1>Mission failed to update!</h1>');
+    return;
+  } catch (error) {
+    res.send('<h1>Mission failed to update!</h1>');
+    console.error('Error updating mission: ', error);
+    return;
+  }
+});
+
+app.get('/delete-fake-mission', async (req, res) => {
+  let missionId = 'B3qtZ1aSHkeLNWYS3GAm';
+  try {
+    let didDeletewWork = await DeleteMission(missionId);
+    if(didDeletewWork) {
+      console.log('Mission deleted successfully');
+      res.send('<h1>Mission deleted successfully</h1>');
+      return;
+    }
+    console.error('Error deleting mission: ', error);
+    res.send('<h1>Mission failed to delete!</h1>');
+    return;
+  } catch (error) {
+    console.error('Error deleting mission: ', error);
+    res.send('<h1>Mission failed to delete!</h1>');
+    return;
+  }
+});
+
+// TEST MISSIONS CRUD
+
+// TEST TEAMS CRUD
+app.get('/fake-team', async (req, res) => {
+  console.log('Inserting team into db');
+  let randomTeam = teamGenerator();
+  try {
+    let docRef = await InsertTeam(randomTeam);
+    if(typeof docRef === 'string' && docRef.length > 0) {
+      res.send(`<h1>Team inserted with ID: ${docRef}</h1>`)
+      return;
+    }
+
+    res.send('<h1>Team failed to insert!</h1>');
+    return;
+  } catch (error) {
+    console.error('Error inserting team: ', error.stack);
+    res.send('<h1>Team failed to insert!</h1>');
+  }
+});
+
+// Read a Team by ID
+app.get('/read-fake-team', async (req, res) => {
+  let teamId = 'sr0wCBMyyEXcLobGisj8'; // Replace with a real team ID
+  try {
+    let teamData = await GetTeamById(teamId);
+    if (teamData !== null) {
+      console.log(`Team data: ${JSON.stringify(teamData, null, 2)}`);
+      res.send('<h1>Team read successfully</h1>');
+    } else {
+      res.send('<h1>Team not found!</h1>');
+      return;
+    }
+  } catch (error) {
+    console.error('Error reading team: ', error.stack);
+    res.send('<h1>Error reading team</h1>');
+    return;
+  }
+});
+
+// Update a Team by ID
+app.get('/update-fake-team', async (req, res) => {
+  let teamId = 'sr0wCBMyyEXcLobGisj8'; // Replace with a real team ID
+  let updatedTeamData = teamGenerator();
+  updatedTeamData.members[0].name = 'update member name';
+  try {
+    let updateResult = await UpdateTeam(teamId, updatedTeamData);
+    if (updateResult) {
+      console.log(`Team updated successfully for ID: ${teamId}`);
+      res.send('<h1>Team updated successfully</h1>');
+      return;
+    } else {
+      res.send('<h1>Team failed to update!</h1>');
+      return;
+    }
+  } catch (error) {
+    console.error('Error updating team: ', error.stack);
+    res.send('<h1>Team failed to update!</h1>');
+    return;
+  }
+});
+
+// Delete a Team by ID
+app.get('/delete-fake-team', async (req, res) => {
+  let teamId = 'sr0wCBMyyEXcLobGisj8'; // Replace with a real team ID
+  try {
+    let deleteResult = await DeleteTeam(teamId);
+    if (deleteResult) {
+      res.send('<h1>Team deleted successfully</h1>');
+      return;
+    } else {
+      res.send('<h1>Team failed to delete!</h1>');
+      return;
+    }
+  } catch (error) {
+    console.error('Error deleting team: ', error.stack);
+    res.send('<h1>Team failed to delete!</h1>');
+    return;
+  }
+});
+
+// TEST TEAMS CRUD
+
+// TEST USERS CRUD
+// Insert a random User into the database
+app.get('/fake-user', async (req, res) => {
+  console.log('Inserting user into db');
+  // You need to define the `generateRandomUser` function or replace it with actual data
+  let randomUser = User.generateRandomUser();
+  try {
+    let docRef = await InsertUser(randomUser);
+    res.send(`<h1>User inserted with ID: ${docRef}</h1>`);
+  } catch (error) {
+    console.error('Error inserting user: ', error);
+    res.send('<h1>User failed to insert!</h1>');
+  }
+});
+
+// Read a User by ID
+app.get('/read-fake-user', async (req, res) => {
+  let userId = '2odjH8peFdwkCzlLBXU0'; // Replace with a real user ID
+  try {
+    let userData = await GetUserById(userId);
+    if (userData) {
+      console.log(`User data: ${JSON.stringify(userData, null, 2)}`);
+      res.send('<h1>User read successfully</h1>');
+    } else {
+      res.send('<h1>User not found!</h1>');
+    }
+  } catch (error) {
+    console.error('Error reading user: ', error);
+    res.send('<h1>Error reading user</h1>');
+  }
+});
+
+// Update a User by ID
+app.get('/update-fake-user', async (req, res) => {
+  let userId = '2odjH8peFdwkCzlLBXU0'; // Replace with a real user ID
+  let newUserData = User.generateRandomUser();
+  newUserData.firstName = 'modified uSer First NaMe';
+  try {
+    let didUpdateWork = await UpdateUser(userId, newUserData);
+    if (didUpdateWork) {
+      console.log(`User updated successfully for ID: ${userId}`);
+      res.send('<h1>User updated successfully</h1>');
+    } else {
+      res.send('<h1>User does not exist!</h1>');
+    }
+  } catch (error) {
+    console.error('Error updating user: ', error.stack);
+    res.send('<h1>User failed to update!</h1>');
+  }
+});
+
+// Delete a User by ID
+app.get('/delete-fake-user', async (req, res) => {
+  let userId = '2odjH8peFdwkCzlLBXU0'; // Replace with a real user ID
+  try {
+    let didDeleteWork = await DeleteUser(userId);
+    if (didDeleteWork) {
+      console.log('User deleted successfully');
+      res.send('<h1>User deleted successfully</h1>');
+    } else {
+      res.send('<h1>User does not exist!</h1>');
+    }
+  } catch (error) {
+    console.error('Error deleting user: ', error);
+    res.send('<h1>User failed to delete!</h1>');
+  }
+});
+// TEST USERS CRUD
+
 
 app.get("/login", async (req, res) => {
   res.render("login.ejs");
