@@ -6,12 +6,12 @@ import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import { error } from "console";
 import { initializeApp } from "firebase/app";
+import { Timestamp, GeoPoint } from "firebase/firestore";
 import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { addDoc, collection, doc, getFirestore, setDoc, getDocs, getDoc, documentId, query as queryFirestore, where } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import { createServer } from "http";
 import { Server } from "socket.io";
-
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const port = 3000;
@@ -32,33 +32,19 @@ const db = getFirestore(firebaseApp);
 const auth = getAuth(firebaseApp);
 // Firebase config 
 
-const server = createServer(app); 
-const socket = new Server(server);
+
 
 const app = express();
+const server = createServer(app); 
+const io = new Server(server);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-http.listen(port, (req, res) => {
+
+
+server.listen(port, (req, res) => {
   console.log(`Listening on port : ${port}`);
 });
-
-
-
-// ---------------- SOCKET ---------------------
-
-const httpServer = createServer();
-
-io.on('connection', function(socket) {
-  console.log('User conencted');
-
-  socket.on('disconnect', function() {
-    console.log('User disconnected');
-  });
-});
-
-// ---------------- SOCKET ---------------------
-
 
 
 // ---------------- ROUTES ---------------------
@@ -137,6 +123,19 @@ app.post('/register', async(req, res) => {
 // ---------------- ROUTES ---------------------
 
 
+// ---------------- SOCKET ---------------------
+
+io.on('connection', function(socket){
+  console.log('User connected');
+
+  socket.on('disconnect', function() {
+    console.log('User disconnected');
+  });
+});
+
+// ---------------- SOCKET ---------------------
+
+
 // **************** METHODS ****************
 
 async function doesEmailExists(email) {
@@ -152,6 +151,10 @@ async function doesEmailExists(email) {
   } catch (error) {
     console.error(`Error while querying firebase users`);
   }
+}
+
+function simulateMission() {
+  
 }
 
 async function loginAppUser(loginData) {
