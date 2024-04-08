@@ -508,18 +508,24 @@ app.get('/report', async (req, res) => {
   currentSelectedReportIndex = reportId;
 
   // Assuming the mission report data includes ids for the drone, team, and mission
-  let droneId = currentSelectedReportData.missionReport.droneId;
-  let teamId = currentSelectedReportData.missionReport.teamId;
-  let missionId = currentSelectedReportData.missionReport.missionId;
+  let droneId = currentSelectedReportData.report.droneId;
+  let teamId = currentSelectedReportData.report.teamId;
+  let missionId = currentSelectedReportData.report.missionId;
+
+  console.log(`current report data: ${JSON.stringify(currentSelectedReportData.report, null, 2)}`);
+
+  console.log(`team id: ${teamId}`);
+  console.log(`droneId id: ${droneId}`);
+  console.log(`mission id: ${missionId}`);
 
   // Fetch related data based on the ids
   currentSelectedDroneData = new Drone(await GetDroneById(droneId));
   currentSelectedTeamData = new Team(await GetTeamById(teamId));
   currentSelectedMissionData = new Mission(await GetMissionById(missionId));
 
-  console.log(`Selected report: ${JSON.stringify(currentSelectedReportData.missionReport, null, 2)}`);
+  // console.log(`Selected report: ${JSON.stringify(currentSelectedReportData.missionReport, null, 2)}`);
   res.render('report-view.ejs', {
-      report: currentSelectedReportData.missionReport,
+      report: currentSelectedReportData.report,
       drone: currentSelectedDroneData,
       team: currentSelectedTeamData,
       mission: currentSelectedMissionData,

@@ -24,7 +24,7 @@ export default class MissionReport {
         this._maxSpeed = missionReportData.maxSpeed;
         this._signalStrength = missionReportData.signalStrength;
         this._pilotId = missionReportData.pilotId;
-        this._teamId = missionReportData._teamId;
+        this._teamId = missionReportData.teamId;
         this._missionId = missionReportData.missionId;
         this._missionType = missionReportData.missionType;
         this._missionUrgency = missionReportData.missionUrgency;
@@ -34,6 +34,16 @@ export default class MissionReport {
 
     get flightPath() {
         return this._flightPath.path;
+    }
+    get flightPathString() {
+        let pathString = '';
+        this._flightPath.path.forEach((pathValue, index) => {
+            pathString += `[${pathValue.latitude}°, ${pathValue.longitude}°]`;
+            if (index !== this._flightPath.path.length - 1) {
+                pathString += `, `;
+            }
+        });
+        return pathString;
     }
 
     get logs() {
@@ -309,8 +319,8 @@ export class MissionReportGenerator {
     }
 }
 
-let randomMissionReport = MissionReportGenerator.generateRandomMissionReport();
-console.log(JSON.stringify(randomMissionReport, null, 2));
+// let randomMissionReport = MissionReportGenerator.generateRandomMissionReport();
+// console.log(JSON.stringify(randomMissionReport, null, 2));
 
     // WRITE
     export async function InsertMissionReport(missionReportData) {
@@ -349,6 +359,10 @@ console.log(JSON.stringify(randomMissionReport, null, 2));
         const missionReportsArray = []; // Initialize an empty array to store the MissionReport objects
     
         missionReportsSnapshot.forEach(doc => {
+            console.log(`teamId loop object : ${JSON.stringify(doc.data().teamId, null, 2)}`);
+            console.log(`missionId loop object : ${JSON.stringify(doc.data().missionId, null, 2)}`);
+            console.log(`DroneId loop object : ${JSON.stringify(doc.data().droneId, null, 2)}`);
+
             // For each document, create a new MissionReport object and add it to the array
             const missionReport = {
                 report: new MissionReport(doc.data()), // Assuming the constructor of MissionReport can take the Firestore document data directly
