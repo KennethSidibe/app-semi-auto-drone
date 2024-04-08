@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book Room</title>
+
+    <!-- Bootstrap -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="styles/rooms-list.css" />
+    <!-- Boostrap -->
+
+    <!-- Boostrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    />
+    <!-- Boostrap Icons -->
+
+    <!-- Tel Phone Input -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/intl-tel-input@20.1.0/build/css/intlTelInput.css"
+    />
+    <!-- Tel Phone Input -->
+
+    <!-- Font awesome CDN -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <!-- Font Awesome CDN -->
+  </head>
+
+  <body>
+    <style>
+      .hotel-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .reservation-info-container {
+        background-color: #dff5ffdc;
+      }
+      hr {
+        opacity: 0.08;
+        width: 85%;
+      }
+      .rounded-container {
+        background-color: #ffffff;
+        border-radius: 2rem;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+      }
+      body {
+        background-color: #eff3f7;
+      }
+      .hide {
+        display: none;
+      }
+    </style>
+
+    <div class="container w-75 rounded-container">
+      <div class="d-flex flex-column">
+        <div class="d-flex flex-row gap-2">
+          <p><i class="bi bi-arrow-left"></i></p>
+          <h5 class="text-primary">
+            <a href="/drone?id=<%= id %>">Retour au drone</a>
+          </h5>
+        </div>
+        <h3 class="mb-0">Modify Cargo</h3>
+        <p class="text-body-tertiary">Drone: <%= drone.droneName %></p>
+      </div>
+
+      <form
+        action="/update-drone-cargo"
+        id="modifyUserForm"
+        method="post"
+        class="mt-5"
+      >
+        <div class="row my-3">
+          <h3 class="mb-3">Cargo</h3>
+          <div class="col-6">
+            <label for="first name" class="form-label">item</label>
+            <input
+              type="text"
+              class="form-control"
+              id="itemNameInput"
+              name="itemName"
+              placeholder="Medical stuf"
+              value="<%= drone.payloadName %>"
+            />
+            <div
+              id="itemNameError"
+              class="hide form-text text-danger fw-medium"
+            ></div>
+          </div>
+
+          <div class="col-6">
+            <label for="pilot name" class="form-label">Item weight</label>
+            <input
+              type="number"
+              step="0.1"
+              class="form-control"
+              id="itemWeightInput"
+              name="itemWeight"
+              placeholder="10.01Kg"
+              value="<%= drone.payloadWeight %>"
+            />
+            <div
+              id="itemWeightError"
+              class="hide form-text text-danger fw-medium"
+            ></div>
+          </div>
+          
+        </div>
+
+        <div class="row mt-5">
+
+          <div class="col-4">
+            <label for="pilotId" class="form-label">Item Width</label>
+            <input
+              type="number"
+              step="0.01"
+              id="itemWidthInput"
+              class="form-control"
+              name="itemWidth"
+              placeholder="5.6m"
+              value="<%= drone.payloadWidth %>"
+            />
+            <div
+              id="itemWidthError"
+              class="hide form-text text-danger fw-medium"
+            ></div>
+          </div>
+
+          <div class="col-4">
+            <label for="serial number" class="form-label">Item Length</label>
+            <input
+              type="number"
+              step="0.01"
+              id="itemLengthInput"
+              class="form-control"
+              name="itemLength"
+              value="<%= drone.payloadLength %>"
+              placeholder="2m"
+            />
+            <div
+              id="itemLengthError"
+              class="hide form-text text-danger fw-medium"
+            ></div>
+          </div>
+
+          <div class="col-4">
+            <label for="serial number" class="form-label">Item height</label>
+            <input
+              type="number"
+              step="0.01"
+              id="itemHeightInput"
+              class="form-control"
+              name="itemHeight"
+              placeholder="1.4m"
+              value="<%= drone.payloadHeight %>"
+            />
+            <div
+              id="itemHeightError"
+              class="hide form-text text-danger fw-medium"
+            ></div>
+          </div>
+
+          <div class="mt-5">
+            <div class="form-floating">
+              <textarea class="form-control" placeholder="item Description" name="itemDescription" value id="itemDescriptionInput" style="height: 100px;width:40%"><%= drone.payloadDescription %></textarea>
+              <label for="itemDescription">Description</label>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="row mt-4">
+          <div
+            class="d-flex mt-5 mb-2 flex-row justify-content-center align-items-center"
+          >
+            <button
+              value="submit"
+              id="submitFormBtn"
+              class="btn btn-dark rounded-4"
+            >
+              Apply changes
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- JQuery CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <!-- JQuery CDN -->
+    
+    <!-- Boostrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Boostrap -->
+
+    <script src="js/validate-edit-drone-cargo.js"></script>
+
+    
+
+  </body>
+</html>

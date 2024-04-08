@@ -32,7 +32,6 @@ export default class Team {
         this._name = value;
     }
 
-
     addMember(newMember) {
         this._members.push(newMember);
     }
@@ -44,6 +43,10 @@ export default class Team {
     get teamLeader() {
         const leader = this._members.find(member => member.leader === true);
         return leader || null; 
+    }
+    get leaderName() {
+        const leader = this._members.find(member => member.leader === true);
+        return leader.name || ''; 
     }
     get teamName() {
       return this._name
@@ -93,8 +96,10 @@ export function teamGenerator() {
 }
 
 // Example usage
-// let myTeam = teamGenerator("Alpha Squad");
+// let myTeam = new Team(teamGenerator());
 // console.log(myTeam);
+
+// console.log(`team leader name: ${JSON.stringify(myTeam.leaderName)}`);
 
 
     // WRITE
@@ -125,6 +130,23 @@ export function teamGenerator() {
           console.error("Error fetching team: ", error.stack);
           return null;
         }
+    }
+
+    export async function getAllTeams() {
+      const teamsRef = collection(db, 'teams'); 
+      const teamsSnapshot = await getDocs(teamsRef);
+  
+      const teamsArray = []; 
+  
+      teamsSnapshot.forEach(doc => {
+          const team = {
+              team: new Team(doc.data()), 
+              id: doc.id 
+          };
+          teamsArray.push(team);
+      });
+  
+      return teamsArray; 
     }
     // READ
 

@@ -10,7 +10,6 @@ export default class MissionReport {
         this._logs = missionReportData.logs;
         this._mappingsId = missionReportData.mappingsId;
         this._photosId = missionReportData.photosId;
-        this._team = missionReportData.team;
         this._videosId = missionReportData.videosId;
         this._maxAltitude = missionReportData.maxAltitude;
         this._controlMode = missionReportData.controlMode;
@@ -25,6 +24,10 @@ export default class MissionReport {
         this._maxSpeed = missionReportData.maxSpeed;
         this._signalStrength = missionReportData.signalStrength;
         this._pilotId = missionReportData.pilotId;
+        this._teamId = missionReportData._teamId;
+        this._missionId = missionReportData.missionId;
+        this._missionType = missionReportData.missionType;
+        this._missionUrgency = missionReportData.missionUrgency;
     }
 
     // --------------- GETTERS
@@ -45,8 +48,20 @@ export default class MissionReport {
         return this._photosId;
     }
 
-    get team() {
-        return this._team;
+    get missionId() {
+        return this._missionId;
+    }
+
+    get teamId() {
+        return this._teamId;
+    }
+
+    get missionType() {
+        return this._missionType;
+    }
+
+    get missionUrgency() {
+        return this._missionUrgency;
     }
 
     get videosId() {
@@ -123,8 +138,20 @@ export default class MissionReport {
         this._photosId = value;
     }
 
-    set team(value) {
-        this._team = value;
+    set missionType(value) {
+        this._missionType = value;
+    }
+
+    set missionUrgency(value) {
+        this._missionUrgency = value;
+    }
+
+    set teamId(value) {
+        this._teamId = value;
+    }
+
+    set missionId(value) {
+        this._missionId = value;
     }
 
     set videosId(value) {
@@ -198,6 +225,22 @@ export class MissionReportGenerator {
             }
             return logs;
         };
+        const missionTypes = ['Reconnaissance', 'Delivery', 'Surveillance', 'Rescue'];
+        const urgencies = ['Low', 'Medium', 'High', 'Critical'];
+
+        let teamIdRandom = [
+            'sdkfjs249',
+            'sldfals324',
+            'sdlkfssa23',
+            'pqoreow1239'
+        ];
+        let missionIdRandom = [
+            'sdkfjs249',
+            'sldfals324',
+            'sdlkfssa23',
+            'pqoreow1239'
+        ];
+
 
         let flightPath = {
             path: 
@@ -248,12 +291,16 @@ export class MissionReportGenerator {
             distanceTraveled: getRandomNumber(1, 10000),
             videosId : videosId,
             photosId: photosId,
+            teamId: `T-`+ teamIdRandom[getRandomNumber(0, teamIdRandom.length)],
+            missionId: `M-`+ missionIdRandom[getRandomNumber(0, missionIdRandom.length)],
             droneId: `D-${getRandomNumber(1000, 9999)}`,
             duration: getRandomNumber(1000, 5000),
             lidarReadings: [getRandomNumber(1, 10) / 10, getRandomNumber(1, 10) / 10],
             lowestAltitude: getRandomNumber(1, 500),
             lowestSpeed: getRandomNumber(1, 50),
             maxSpeed: getRandomNumber(10, 100),
+            missionType: missionTypes[getRandomNumber(0, missionTypes.length - 1)],
+            missionUrgency: urgencies[getRandomNumber(0, urgencies.length - 1)],
             signalStrength: `S-${getRandomNumber(1, 100)}`,
             pilotId: `P-${getRandomNumber(1000, 9999)}`
         };
@@ -262,8 +309,8 @@ export class MissionReportGenerator {
     }
 }
 
-// let randomMissionReport = MissionReportGenerator.generateRandomMissionReport();
-// console.log(JSON.stringify(randomMissionReport, null, 2));
+let randomMissionReport = MissionReportGenerator.generateRandomMissionReport();
+console.log(JSON.stringify(randomMissionReport, null, 2));
 
     // WRITE
     export async function InsertMissionReport(missionReportData) {
@@ -293,6 +340,24 @@ export class MissionReportGenerator {
           console.error("Error fetching mission report: ", error.stack);
           return null;
         }
+    }
+
+    export async function getAllMissionReports() {
+        const missionReportsRef = collection(db, 'missionReports'); // Reference to the missionReports collection
+        const missionReportsSnapshot = await getDocs(missionReportsRef); // Get a snapshot of all documents in the collection
+    
+        const missionReportsArray = []; // Initialize an empty array to store the MissionReport objects
+    
+        missionReportsSnapshot.forEach(doc => {
+            // For each document, create a new MissionReport object and add it to the array
+            const missionReport = {
+                report: new MissionReport(doc.data()), // Assuming the constructor of MissionReport can take the Firestore document data directly
+                id: doc.id
+            };
+            missionReportsArray.push(missionReport);
+        });
+    
+        return missionReportsArray; // Return the array of MissionReport objects
     }
     // READ 
 

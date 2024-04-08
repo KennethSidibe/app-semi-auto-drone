@@ -4,7 +4,7 @@ import { dirname } from "path";
 import ejs from "ejs";
 import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
-import { error } from "console";
+import { error, log } from "console";
 import { initializeApp } from "firebase/app";
 import { Timestamp, GeoPoint } from "firebase/firestore";
 import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
@@ -16,16 +16,16 @@ import { Server } from "socket.io";
 // MODELS IMPORT
 
 import Drone from "./models/drones.js";
-import { InsertDrone, deleteDrone, GetDroneById, UpdateDrone } from "./models/drones.js";
+import { InsertDrone, deleteDrone, GetDroneById, UpdateDrone, getAllDrones } from "./models/drones.js";
 
 import MissionReport from "./models/missions-report.js";
-import { InsertMissionReport, GetMissionReportById, UpdateMissionReport, DeleteMissionReport, MissionReportGenerator } from "./models/missions-report.js";
+import { InsertMissionReport, GetMissionReportById, getAllMissionReports, UpdateMissionReport, DeleteMissionReport, MissionReportGenerator } from "./models/missions-report.js";
 
 import Mission from "./models/missions.js";
-import { InsertMission, GetMissionById, UpdateMission, DeleteMission } from "./models/missions.js";
+import { InsertMission, GetMissionById, getAllMissions, UpdateMission, DeleteMission } from "./models/missions.js";
 
 import Team from "./models/teams.js";
-import { InsertTeam, GetTeamById, UpdateTeam, DeleteTeam, teamGenerator } from "./models/teams.js";
+import { InsertTeam, GetTeamById, UpdateTeam, DeleteTeam, teamGenerator, getAllTeams } from "./models/teams.js";
 
 import User from "./models/users.js";
 import { InsertUser, GetUserById, DeleteUser, UpdateUser } from "./models/users.js";
@@ -477,6 +477,316 @@ app.post('/login', async(req, res) => {
   return
 });
 
+app.get('/view-reports', async (req, res) => {
+  const reports = await getAllMissionReports();
+  let randomUser = new User(User.generateRandomUser());
+  currentReportsData = reports;
+  currentUserData = randomUser;
+
+  console.log(`all reports ${JSON.stringify(reports, null, 2)}`);
+  console.log(`User object type: ${randomUser.firstName}` );
+
+  res.render('select-report.ejs', {
+    reports: reports,
+    user: currentUserData
+  });
+});
+
+app.get('/report', async (req, res) => {
+
+  let reportId = parseInt(req.query.id); // Get report ID from the query string
+  reportId = reportId === -1 ? currentSelectedReportIndex === -1 ? -1 : currentSelectedReportIndex : reportId;
+
+  console.log(`Report id ${reportId}`);
+  if(reportId === -1) {
+      res.redirect('/view-report?error'); // Redirect if no valid report ID is found
+      return;
+  }
+
+  // Fetch the selected report data based on reportId
+  currentSelectedReportData = currentReportsData[reportId];
+  currentSelectedReportIndex = reportId;
+
+  // Assuming the mission report data includes ids for the drone, team, and mission
+  let droneId = currentSelectedReportData.missionReport.droneId;
+  let teamId = currentSelectedReportData.missionReport.teamId;
+  let missionId = currentSelectedReportData.missionReport.missionId;
+
+  // Fetch related data based on the ids
+  currentSelectedDroneData = new Drone(await GetDroneById(droneId));
+  currentSelectedTeamData = new Team(await GetTeamById(teamId));
+  currentSelectedMissionData = new Mission(await GetMissionById(missionId));
+
+  console.log(`Selected report: ${JSON.stringify(currentSelectedReportData.missionReport, null, 2)}`);
+  res.render('report-view.ejs', {
+      report: currentSelectedReportData.missionReport,
+      drone: currentSelectedDroneData,
+      team: currentSelectedTeamData,
+      mission: currentSelectedMissionData,
+      user: currentUserData,
+      id: currentSelectedReportIndex
+  });
+
+});
+
+app.get('/view-missions', async (req, res) => {
+  const missions = await getAllMissions();
+  let randomUser = new User(User.generateRandomUser());
+  
+  currentMissionsData = missions;
+  currentUserData = randomUser;
+
+  console.log(`all missions ${JSON.stringify(missions, null, 2)}`);
+  console.log(`User object type: ${randomUser.firstName}` );
+  res.render('select-mission.ejs', {
+    missions: missions,
+    user: currentUserData
+  });
+});
+
+
+app.get('/view-drone', async(req, res) => {
+  let drones = await getAllDrones();
+  let randomUser = new User(User.generateRandomUser());
+  currentDronesData = drones;
+  currentUserData = randomUser;
+  console.log(`all drones ${JSON.stringify(drones, null, 2)}`);
+  console.log(`User object type: ${randomUser.firstName}` );
+  res.render('select-drone.ejs', {
+    drones:drones,
+    user: randomUser
+  });
+});
+
+app.get('/drone', async(req, res) => {
+  
+  let droneId = parseInt(req.query.id);
+  droneId = droneId === -1 ? currentSelectedDroneIndex === -1 ? -1 : currentSelectedDroneIndex : droneId;
+  console.log(`drone id ${droneId}`);
+  if(droneId === -1) {
+    res.redirect('/viewDrone?error');
+    return;
+  }
+
+  currentSelectedDroneData = currentDronesData[droneId];
+  currentSelectedDroneIndex = droneId;
+  console.log(`selected drone: ${JSON.stringify(currentSelectedDroneData.drone, null, 2)}`);
+  res.render('drone-view.ejs', {
+    drone: currentSelectedDroneData.drone,
+    user : currentUserData,
+    id: currentSelectedDroneIndex
+  });
+});
+
+// good
+app.get('/mission', async(req, res) => {
+  
+  let missionId = parseInt(req.query.id);
+  missionId = missionId === -1 ? currentSelectedMissionIndex === -1 ? -1 : currentSelectedMissionIndex : missionId;
+  
+  console.log(`Mission id ${missionId}`);
+  if(missionId === -1) {
+    res.redirect('/viewMission?error');
+    return;
+  }
+
+  currentSelectedMissionData = currentMissionsData[missionId];
+  currentSelectedMissionIndex = missionId;
+  currentSelectedDroneData = new Drone(await GetDroneById(currentSelectedMissionData.mission.droneId));
+  currentSelectedTeamData = new Team(await GetTeamById(currentSelectedMissionData.mission.teamId));
+
+  res.render('mission-view.ejs', {
+    mission: currentSelectedMissionData.mission,
+    drone: currentSelectedDroneData,
+    team:currentSelectedTeamData,
+    user: currentUserData,
+    id: currentSelectedMissionIndex
+  });
+
+});
+
+app.get('/update-mission', async(req, res) => {
+
+  let drones = await getAllDrones();
+  currentDronesData = drones;
+
+  let teams = await getAllTeams();
+  currentTeamsData = teams;
+
+  res.render('mission-edit.ejs',
+  {
+    mission: currentSelectedMissionData,
+    drones: drones,
+    teams:teams,
+    user: currentUserData,
+    id: 2
+  });
+
+});
+
+app.post('/update-mission', async (req, res) => {
+
+  let droneId = parseInt(req.body.droneArrIndex.trim());
+  let teamId = parseInt(req.body.teamArrIndex.trim());
+  let droneDbId = req.body.droneId;
+  let teamDbId = req.body.teamId.trim();
+  let missionUrgency = req.body.missionUrgency.trim();
+  let missionType = req.body.missionType.trim();
+  let missionActive = req.body.missionActive.trim() === 'true';
+
+  // Parse indexes to integers
+  let missionSelectedDroneIndex = parseInt(droneId, 10);
+  let missionSelectedTeamIndex = parseInt(teamId, 10);
+
+  let missionId = currentMissionsData[currentSelectedMissionIndex].id; 
+
+  const updateData = {
+    droneId: droneDbId,
+    teamId: teamDbId,
+    type: missionType,
+    urgency: missionUrgency,
+    active: missionActive
+  };
+
+  console.log(`Update data: ${JSON.stringify(updateData, null, 2)}`);
+
+  try {
+    // Update the mission document in Firestore
+    let didUpdateWork = await UpdateMission(missionId, updateData);
+    if (didUpdateWork) {
+      // Update the mission document in the server's memory (if applicable)
+      currentMissionsData[currentSelectedMissionIndex].mission.drone = currentDronesData[droneId].drone;
+      currentMissionsData[currentSelectedMissionIndex].mission.team = currentTeamsData[teamId].team;
+      currentMissionsData[currentSelectedMissionIndex].mission.type = missionType;
+      currentMissionsData[currentSelectedMissionIndex].mission.urgency = missionUrgency;
+      currentMissionsData[currentSelectedMissionIndex].mission.active = missionActive;
+      currentMissionsData[currentSelectedMissionIndex].mission.teamId = teamDbId;
+      currentMissionsData[currentSelectedMissionIndex].mission.droneId = droneDbId;
+      currentSelectedMissionData = currentMissionsData[currentSelectedMissionIndex];
+
+      res.redirect(`/mission?id=${currentSelectedMissionIndex}`); // Redirect to the updated mission view
+    } else {
+      throw new Error('Update failed');
+    }
+  } catch (error) {
+    console.error('Error updating mission: ', error);
+    res.redirect(`/mission?updateFailed&id=${currentSelectedMissionIndex}`); // Redirect with an error flag if update failed
+  }
+});
+
+
+
+app.get('/edit-drone-id', async(req, res) => {
+
+  res.render('drone-edit-id.ejs', {
+    drone: currentSelectedDroneData.drone,
+    user : currentUserData,
+    id: currentSelectedDroneIndex
+  });
+});
+
+app.post('/update-drone-id', async(req, res) => {
+
+  let droneName = (req.body.droneName).trim();
+  let pilotName = (req.body.pilotName).trim();
+  let pilotId = (req.body.pilotId).trim();
+  let serialNumber = (req.body.serialNumber).trim();
+
+  // Construct an update object manually
+  const updateData = {
+    identification: {
+      name: droneName,
+      pilot:{
+        name: pilotName,
+        userId: pilotId
+      },
+      serialNumber: {value: serialNumber}
+    }
+  };
+
+  console.log(`update data: ${JSON.stringify(updateData, null, 2)}`);
+
+  let droneDocumentId = currentDronesData[currentSelectedDroneIndex].id;
+  console.log(`Drone selected id: ${currentSelectedDroneIndex}`);
+
+  let didUpdateWork = await UpdateDrone(droneDocumentId, updateData);
+  
+  if(didUpdateWork) {
+    // current selected drone
+    currentSelectedDroneData.drone.droneName = droneName;
+    currentSelectedDroneData.drone.pilotName = pilotName;
+    currentSelectedDroneData.drone.pilotId = pilotId;
+    currentSelectedDroneData.drone.serialNumber = serialNumber;
+
+    // current drones data
+    currentDronesData[currentSelectedDroneIndex].drone.droneName = droneName;
+    currentDronesData[currentSelectedDroneIndex].drone.pilotName = pilotName;
+    currentDronesData[currentSelectedDroneIndex].drone.pilotId = pilotId;
+    currentDronesData[currentSelectedDroneIndex].drone.serialNumber = serialNumber;
+    
+    res.redirect(`/drone?id=${currentSelectedDroneIndex}`);
+    return;
+  }
+  res.redirect('/drone?updateFailed');
+  return;
+});
+
+app.get('/edit-drone-cargo', async(req, res) => {
+
+  res.render('drone-edit-cargo.ejs', {
+    drone: currentSelectedDroneData.drone,
+    user : currentUserData,
+    id: currentSelectedDroneIndex
+  });
+});
+
+app.post('/update-drone-cargo', async (req, res) => {
+
+  let itemName = req.body.itemName.trim();
+  let itemWidth = parseInt(req.body.itemWidth, 10);
+  let itemHeight = parseInt(req.body.itemHeight, 10);
+  let itemLength = parseInt(req.body.itemLength, 10);
+  let itemWeight = parseFloat(req.body.itemWeight);
+  let itemDescription = req.body.itemDescription.trim();
+
+  let cargo = {
+    dimensions: {
+      width: itemWidth,
+      height: itemHeight,
+      length: itemLength
+    },
+    item: itemName,
+    description: itemDescription,
+    weight: itemWeight
+  };
+
+  const updateData = {
+    payload: {
+      cargo: cargo
+    }
+  };
+
+  console.log(`Update data: ${JSON.stringify(updateData, null, 2)}`);
+
+  let droneDocumentId = currentDronesData[currentSelectedDroneIndex].id;
+  console.log(`Drone selected id: ${currentSelectedDroneIndex}`);
+
+  try {
+    let didUpdateWork = await UpdateDrone(droneDocumentId, updateData);
+    if (didUpdateWork) {
+      currentSelectedDroneData.cargo = cargo;
+      currentDronesData[currentSelectedDroneIndex].drone.cargo = cargo;
+      res.redirect(`/drone?id=${currentSelectedDroneIndex}`);
+    } else {
+      throw new Error('Update failed');
+    }
+  } catch (error) {
+    console.error('Error updating drone: ', error);
+    res.redirect('/drone?updateFailed');
+  }
+
+});
+
 app.post('/register', async(req, res) => {
 
   let email = (req.body.email).toLowerCase();
@@ -511,7 +821,6 @@ app.post('/register', async(req, res) => {
 
   console.log(`User successfully registered!`);
   res.redirect('/');
-
 });
 
 
@@ -624,7 +933,33 @@ function generateCode() {
 
 // __________________ DATA _________________
 
+// DRONES
+let currentDronesData = [];
+let currentSelectedDroneData = {};
+let currentSelectedDroneIndex = -1;
+// DRONES
 
+// MISSIONS
+let currentMissionsData = [];
+let currentSelectedMissionData = {};
+let currentSelectedMissionIndex = -1;
+// MISSIONS
+
+// MISSIONS reports
+let currentReportsData = [];
+let currentSelectedReportData = {};
+let currentSelectedReportIndex = -1;
+// MISSIONS
+
+// TEAMS
+let currentTeamsData = [];
+let currentSelectedTeamData = {};
+let currentSelectedTeamIndex = -1;
+// TEAMS
+
+// USERS
+let currentUserData = {};
+// USERS
 
 // __________________ DATA _________________    
 

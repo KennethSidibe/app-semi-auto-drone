@@ -16,6 +16,7 @@ export default class Mission {
         this._teamLeaderId = missionData.teamLeaderId;
         this._type = missionData.type;
         this._urgency = missionData.urgency;
+        this._active = missionData.active;
     }
 
     // --------------- GETTERS
@@ -28,8 +29,16 @@ export default class Mission {
         return this._endAt;
     }
 
+    get endAtSeconds() {
+        return parseInt(this._endAt.seconds) * 1000;
+    }
+
     get location() {
         return this._location;
+    }
+
+    get locationString() {
+        return `[${this._location.longitude}°, ${this._location.latitude}°]`;
     }
 
     get pilotId() {
@@ -38,6 +47,10 @@ export default class Mission {
 
     get startedAt() {
         return this._startedAt;
+    }
+
+    get startedAtSeconds() {
+        return parseInt(this._startedAt.seconds) * 1000;
     }
 
     get teamId() {
@@ -54,6 +67,10 @@ export default class Mission {
 
     get urgency() {
         return this._urgency;
+    }
+
+    get active() {
+        return this._active;
     }
 
     // --------------- SETTERS
@@ -95,11 +112,16 @@ export default class Mission {
         this._urgency = value;
     }
 
+    set active(value) {
+        this._active = value;
+    }
+
     // METHODS
     static generateRandomMission() {
         const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
         const missionTypes = ['Reconnaissance', 'Delivery', 'Surveillance', 'Rescue'];
         const urgencies = ['Low', 'Medium', 'High', 'Critical'];
+        const active = Math.random() < 0.5;
 
         const mission = {
             droneId: `D-${getRandomNumber(1000, 9999)}`,
@@ -114,6 +136,7 @@ export default class Mission {
             teamLeaderId: `TL-${getRandomNumber(1000, 9999)}`,
             type: missionTypes[getRandomNumber(0, missionTypes.length - 1)],
             urgency: urgencies[getRandomNumber(0, urgencies.length - 1)],
+            active:active
         };
 
         return mission;
@@ -153,6 +176,22 @@ export default class Mission {
           console.error("Error fetching mission: ", error.stack);
           return null;
         }
+    }
+    export async function getAllMissions() {
+        const missionsRef = collection(db, 'missions'); 
+        const missionsSnapshot = await getDocs(missionsRef); 
+    
+        const missionsArray = []; 
+    
+        missionsSnapshot.forEach(doc => {
+            const mission = {
+                mission: new Mission(doc.data()),
+                id: doc.id
+            };
+            missionsArray.push(mission);
+        });
+    
+        return missionsArray; // Return the array of Mission objects
     }
     // READ
 
@@ -213,6 +252,7 @@ let mission = {
     teamLeaderId : '',
     type : '',
     urgency: ''
+    active: false
 }
 
 

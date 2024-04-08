@@ -20,11 +20,11 @@ export default class Drone {
         return this._flight;
     }
 
-    get FlightAltitude() {
+    get altitude() {
         return this._flight.altitude.value;
     }
 
-    get BatteryLevel() {
+    get batteryLevel() {
         return this._flight.batteryLevel.value;
     }
 
@@ -35,11 +35,21 @@ export default class Drone {
     get flightLocation() {
         return this._flight.location;
     }
+    get locationString() {
+        return `[${this._flight.location.longitude}°, ${this._flight.location.latitude}°]`;
+    }
+
+    get inMission() {
+        return this._flight.inMission;
+    }
+
+    get isArmed() {
+        return this._flight.armed;
+    }
 
     get orientation() {
         return this._flight.orientation.value;
     }
-    
 
     // Pilot 
     get pilot() {
@@ -69,6 +79,15 @@ export default class Drone {
     get ultrasonic() {
         return this._flight.sensors.ultrasonic;
     }
+    get lidarDistance() {
+        return this._flight.sensors.lidar.distance;
+    }
+    get lidarAngle() {
+        return this._flight.sensors.lidar.angle;
+    }
+    get ultrasonicDistance() {
+        return this._flight.sensors.ultrasonic.distance;
+    }
     // Sensors
 
     get speed() {
@@ -92,6 +111,9 @@ export default class Drone {
     get serialNumber() {
         return this._identification.serialNumber.value;
     }
+    get droneName() {
+        return this._identification.name;
+    }
     // Identification Getters
 
 
@@ -108,6 +130,18 @@ export default class Drone {
     }
     get payloadDimensions() {
         return this._payload.cargo.dimensions;
+    }
+    get payloadWidth() {
+        return this._payload.cargo.dimensions.width;
+    }
+    get payloadHeight() {
+        return this._payload.cargo.dimensions.height;
+    }
+    get payloadLength() {
+        return this._payload.cargo.dimensions.length;
+    }
+    get payloadDimensionsString() {
+        return `${this._payload.cargo.dimensions.width}m x ${this._payload.cargo.dimensions.length}m x ${this._payload.cargo.dimensions.height}m`;
     }
     get payloadName() {
         return this._payload.cargo.item;
@@ -145,7 +179,7 @@ export default class Drone {
     }
 
     get specsSoftVersion() {
-        return this._specifications.softVersion;
+        return this._specifications.softVersion.value;
     }
     // CAMERA SPECS
     get cameraResolution() {
@@ -226,7 +260,30 @@ export default class Drone {
         this._flight.sensors = sensors;
     }
 
-    setSpeed(value) {
+
+    /**
+     * @param {boolean} state
+     */
+    set armed(state) {
+        this._flight.armed = state;    
+    }
+    
+    /**
+     * @param {boolean} state
+     */
+    set inMission(state) {
+        this._flight.inMission = state;    
+    }
+
+    
+    /**
+     * @param {boolean} value
+     */
+    set itemName(value) {
+        this._payload.cargo.item = value;
+    }
+
+    set speed(value) {
         this._flight.speed.value = value;
     }
 
@@ -238,6 +295,9 @@ export default class Drone {
     setIdentification(identification) {
         this._identification = identification;
     }
+    set droneName(value) {
+        this._identification.name = value;
+    }
 
     setPilotInfo(name, userId) {
         this._identification.pilot.name = name;
@@ -246,22 +306,32 @@ export default class Drone {
     set pilotName(value) {
         this._identification.pilot.name = value;
     }
+    set pilotId(value) {
+        this._identification.pilot.userId = value;
+    }
 
-    setSerialNumber(value) {
+    set serialNumber(value) {
         this._identification.serialNumber.value = value;
     }
 
     // Payload Setters
-    setPayload(payload) {
+    set payload(payload) {
         this._payload = payload;
     }
 
-    setCargo(cargo) {
+    set cargo(cargo) {
         this._payload.cargo = cargo;
     }
 
+    /**
+     * @param {any} description
+     */
+    set payloadDescription(description) {
+        this._payload.cargo.description = description;
+    }
+
     // Specifications Setters
-    setSpecifications(specifications) {
+    set specifications(specifications) {
         this._specifications = specifications;
     }
 
@@ -273,6 +343,8 @@ export default class Drone {
         const getRandomBoolean = () => Math.random() < 0.5;
 
         return {
+            inMission : getRandomBoolean(),
+            armed: getRandomBoolean(),
             altitude: { value: getRandomNumber(0, 10000) },
             batteryLevel: { value: getRandomNumber(1, 100) },
             endAt: { 
@@ -304,8 +376,18 @@ export default class Drone {
 
     static generateRandomIdentification() {
         const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const getRandomBoolean = () => Math.random() < 0.5;
+        const randomSerialNumber = `SN-${getRandomNumber(10000, 99999)}`;
+        function getRandomDroneName(serialNumber) {
+            const names = ['ROV', 'EAGLE', 'CROW', 'OWL', 'BEAVER', 'HUSTON', 'BOANGA'];
+            const randomIndex = Math.floor(Math.random() * names.length);
+            const namePrefix = names[randomIndex];
+
+            const serialPrefix = serialNumber.substring(3, 5); // Skips "SN" and gets the next two characters
+
+            return `${namePrefix}-${serialPrefix}`;
+        }
         return {
+            name : getRandomDroneName(randomSerialNumber),
             pilot: {
                 name: `PilotName-${getRandomNumber(1, 100)}`,
                 userId: `U-${getRandomNumber(1000, 9999)}`
@@ -316,7 +398,6 @@ export default class Drone {
 
     static generateRandomPayload() {
         const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const getRandomBoolean = () => Math.random() < 0.5;
         return {
             cargo: {
                 description: `Desc-${getRandomNumber(1, 100)}`,
@@ -389,9 +470,6 @@ export default class Drone {
     }
 
     static generateRandomDrone() {
-        const getRandomNumber = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const getRandomBoolean = () => Math.random() < 0.5;
-    
         return this.generateRandomDroneObject();
     }
     
@@ -432,6 +510,25 @@ export default class Drone {
           return null;
         }
     }
+
+    export async function getAllDrones() {
+        const dronesRef = collection(db, 'drones'); // Reference to the drones collection
+        const dronesSnapshot = await getDocs(dronesRef); // Get a snapshot of all documents in the collection
+    
+        const dronesArray = []; // Initialize an empty array to store the Drone objects
+    
+        dronesSnapshot.forEach(doc => {
+            // For each document, create a new Drone object and add it to the array
+            const drone = {
+                drone: new Drone(doc.data()),
+                id: doc.id
+            }; // Assuming you want to keep the document ID
+            dronesArray.push(drone);
+        });
+    
+        return dronesArray; // Return the array of Drone objects
+    }
+    
     // READ
 
     // DELETE
@@ -487,6 +584,8 @@ export default class Drone {
 /* 
 
 let flight = {
+    armed: false,
+    inMission : true,
     altitude: {value: 0},
     batteryLevel: {value: 0},
     endAt : {date: new Date()},
@@ -518,6 +617,7 @@ let flight = {
 }
 
 let identification = {
+    name: '',
     pilot: {
         name: '',
         userId : ''
