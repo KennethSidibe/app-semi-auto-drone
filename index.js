@@ -25,7 +25,7 @@ import Mission from "./models/missions.js";
 import { InsertMission, GetMissionById, getAllMissions, UpdateMission, DeleteMission } from "./models/missions.js";
 
 import Team from "./models/teams.js";
-import { InsertTeam, GetTeamById, UpdateTeam, DeleteTeam, teamGenerator, getAllTeams } from "./models/teams.js";
+import { InsertTeam, GetTeamById, UpdateTeam, DeleteTeam, createMembersFromFormData, teamGenerator, getAllTeams } from "./models/teams.js";
 
 import User from "./models/users.js";
 import { InsertUser, GetUserById, DeleteUser, UpdateUser } from "./models/users.js";
@@ -535,6 +535,122 @@ app.get('/report', async (req, res) => {
 
 });
 
+app.get('/home', async(req,res) => {
+  res.render('home.ejs');
+});
+
+app.get('/view-teams', async(req,res) => {
+  let teams = await getAllTeams();
+  let randomUser = new User(User.generateRandomUser());
+
+  currentTeamsData = teams;
+  currentUserData = randomUser;
+
+  res.render('select-team.ejs', 
+    {
+      teams:currentTeamsData,
+      user:currentUserData
+    }
+  );
+  
+});
+
+app.get('/team', async(req, res) => {
+  
+  let teamId = parseInt(req.query.id);
+  teamId = teamId === -1 ? currentSelectedTeamIndex === -1 ? -1 : currentSelectedTeamIndex : teamId;
+  console.log(`team id ${teamId}`);
+  if(teamId === -1) {
+    res.redirect('/view-teams?error');
+    return;
+  }
+
+  // Assuming currentTeamsData holds an array of teams
+  currentSelectedTeamData = currentTeamsData[teamId];
+  currentSelectedTeamIndex = teamId;
+  console.log(`selected team: ${JSON.stringify(currentSelectedTeamData, null, 2)}`);
+  res.render('team-view.ejs', {
+    team: currentSelectedTeamData,
+    user: currentUserData,
+    id: currentSelectedTeamIndex
+  });
+
+});
+
+app.get('/update-team', async (req, res) => {
+  const teamId = req.query.id; 
+
+  // const randomTeam = {
+  //   team:new Team(teamGenerator()),
+  //   id: 'sjkfs32482sfkdlJGLDS'
+  // };
+  // const randomUser = new User(User.generateRandomUser());
+
+  // res.render('team-edit.ejs', {
+  //   team: randomTeam,
+  //   user: currentUserData,
+  //   id: 2
+  // });
+  // return;
+
+  if (!teamId) {
+      return res.redirect('/view-teams?error=noTeamIdProvided'); 
+  }
+
+  try {
+      const team = currentSelectedTeamData;
+      if (!team) {
+          return res.redirect('/view-teams?error=teamNotFound'); 
+      }
+
+      res.render('team-edit.ejs', {
+          team: team,
+          user: currentUserData,
+          id: currentSelectedTeamIndex
+      });
+  } catch (error) {
+      console.error('Error fetching team data:', error.stack);
+      res.redirect('/view-teams?error=unexpectedError'); // Redirect in case of any unexpected error
+  }
+});
+
+app.post('/update-team', async(req, res) => {
+  
+  let teamName = req.body.teamName; 
+  let formDataNoTeamName = req.body;
+  delete formDataNoTeamName['teamName'];
+  
+  let members = createMembersFromFormData(formDataNoTeamName);
+
+  if (currentSelectedTeamIndex >= 0 && currentSelectedTeamIndex < currentTeamsData.length) {
+    const teamId = currentSelectedTeamData.id;
+
+    currentSelectedTeamData.team.members = members;
+    currentSelectedTeamData.team.name = teamName;
+
+    const updateData = {
+      name:teamName,
+      members: members
+    };
+
+    let didUpdateWork = await UpdateTeam(teamId, updateData);
+
+    if (didUpdateWork) {
+      currentTeamsData[currentSelectedTeamIndex] = currentSelectedTeamData;
+
+      res.redirect(`/team?id=${currentSelectedTeamIndex}`);
+    } else {
+      res.redirect('/view-teams');
+      throw new Error('Update failed');
+    }
+  } else {
+    console.error('Selected team index is out of bounds or not set.');
+    res.redirect('/teams?updateFailed');
+  }
+
+}); 
+
+
 app.get('/view-missions', async (req, res) => {
   const missions = await getAllMissions();
   let randomUser = new User(User.generateRandomUser());
@@ -625,7 +741,7 @@ app.get('/update-mission', async(req, res) => {
     drones: drones,
     teams:teams,
     user: currentUserData,
-    id: 2
+    id: currentSelectedMissionIndex
   });
 
 });

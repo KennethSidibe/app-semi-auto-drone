@@ -1,7 +1,7 @@
 import { db } from "./db-config.js";
 import { createUserWithEmailAndPassword, getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { addDoc, collection, doc, getFirestore, setDoc, getDocs, getDoc, updateDoc, deleteDoc, documentId, query as queryFirestore, where } from 'firebase/firestore';
-import { GeoPoint } from "firebase/firestore";
+import { GeoPoint, Timestamp } from "firebase/firestore";
 
 
 // TEAMS
@@ -31,9 +31,34 @@ export default class Team {
     set name(value) {
         this._name = value;
     }
+    set teamName(value) {
+      this._name = value;
+    }
 
     addMember(newMember) {
         this._members.push(newMember);
+    }
+
+    getMemberStartedAtString(member) {
+      if(!member || !member.startedAt) {
+        return 'Unknown';
+      }
+      const monthNames = [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      let memberStartedAt = new Date(member.startedAt.seconds * 1000);
+      return `${monthNames[memberStartedAt.getMonth()]} ${memberStartedAt.getFullYear()}`;
     }
 
     removeMember(memberId) {
@@ -112,7 +137,7 @@ export function teamGenerator() {
           console.error("Error adding team: ", error.stack);
           return '';
         }
-      }
+    }
     // WRITE
     
     // READ
@@ -195,6 +220,126 @@ export function teamGenerator() {
         }
     }
     // DELETE
+
+    export function createMembersFromFormData(formData) {
+      let tempMembers = {};
+      let leaderFlags = {};
+      let currentDate = new Date();
+  
+      // Loop through each property in the formData
+      for (let key in formData) {
+          if (formData.hasOwnProperty(key)) {
+              // Extract the member index and type (name, role, leader) from the key
+              let match = key.match(/member(Name|Role|Leader|StartedAt|Id)(\d+)/);
+              if (match) {
+                  let type = match[1];
+                  let index = parseInt(match[2], 10);
+  
+                  // Initialize the member object at the correct index if it doesn't exist
+                  if (!tempMembers[index]) tempMembers[index] = {};
+  
+                  if (type === 'Name') {
+                      tempMembers[index].name = formData[key];
+                  } else if (type === 'Role') {
+                      tempMembers[index].role = formData[key];
+                  } else if (type === 'Leader') {
+                      // Directly assign the leader flag
+                      tempMembers[index].leader = true;
+                  } else if (type === 'StartedAt') {
+
+                    if (parseInt(formData[key]) === 0 || !formData[key]) {
+                      tempMembers[index].startedAt = Timestamp.fromDate(currentDate);
+                    } else {
+                        tempMembers[index].startedAt = Timestamp.fromDate(new Date(parseInt(formData[key])));
+                    }
+                    
+                  } else if (type === 'Id') {
+                    tempMembers[index].id = formData[key];
+                  }
+              }
+          }
+      }
+  
+      // Convert tempMembers object to array
+      let team = { members: [] };
+      for (let index in tempMembers) {
+          if (tempMembers.hasOwnProperty(index)) {
+              team.members.push(tempMembers[index]);
+          }
+      }
+  
+      // Ensure all members have a leader flag set to false if not already true
+      team.members = team.members.map(member => ({
+          ...member,
+          leader: member.leader || false
+      }));
+  
+      return team.members;
+    }
+  
+  // // Example usage:
+  // const formData = {
+  //   "memberName1": "Member 2",
+  //   "memberRole1": "Police",
+  //   "memberStartedAt1": '1712637896666',
+  //   "memberId1": 'M-AF89',
+  //   "memberName2": "Member 3",
+  //   "memberRole2": "Medic Rescue",
+  //   "memberStartedAt2": '1712637896670',
+  //   "memberId2": 'M-PF924',
+  //   "memberName4": "Member 5",
+  //   "memberRole4": "Police",
+  //   "memberLeader4": "on",
+  //   "memberStartedAt4": '1712637896680',
+  //   "memberId4": 'M-ZS9242',
+  //   "memberName5": "Member 6",
+  //   "memberRole5": "Firefighter",
+  //   "memberStartedAt5": '1712637896690',
+  //   "memberId5": 'M-RE029',
+  // };
+
+  // let formData = {
+  //   "memberName0": "Rosie",
+  //   "memberRole0": "Firefighter",
+  //   "memberId0": "M-TY922",
+  //   "memberStartedAt0": "1711950584000",
+  //   "memberName1": "Mallory",
+  //   "memberRole1": "Onsite Operationer",
+  //   "memberId1": "M-TY922",
+  //   "memberStartedAt1": "1711947188000",
+  //   "memberName2": "Romaric",
+  //   "memberRole2": "Police",
+  //   "memberId2": "M-TY922",
+  //   "memberStartedAt2": "1711944000000",
+  //   "memberName3": "Dalila",
+  //   "memberRole3": "Medic Rescue",
+  //   "memberId3": "M-TY922",
+  //   "memberStartedAt3": "1712033622000",
+  //   "memberName4": "Abdoul",
+  //   "memberRole4": "Rescue Agent",
+  //   "memberId4": "M-TY922",
+  //   "memberStartedAt4": "1712116800000",
+  //   "memberName5": "King",
+  //   "memberRole5": "Operational director",
+  //   "memberLeader5": "on",
+  //   "memberId5": "M-TY922",
+  //   "memberStartedAt5": "1712040743000",
+  //   "memberName6": "Poda",
+  //   "memberRole6": "Disaster Operationer",
+  //   "memberId6": "M-TY922",
+  //   "memberStartedAt6": "1712037166000",
+  //   "memberName7": "Aziz",
+  //   "memberRole7": "Assistant",
+  //   "memberId7": "",
+  //   "memberStartedAt7": "0",
+  //   "memberName8": "Farid",
+  //   "memberRole8": "Assistant",
+  //   "memberId8": "",
+  //   "memberStartedAt8": "0"
+  // }
+  
+  // let team = createMembersFromFormData(formData);
+  // console.log(team);
 
 /*
 

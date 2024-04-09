@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Select Mission</title>
+    <title>Select team</title>
 
     <!-- Bootstrap -->
     <link
@@ -100,82 +100,74 @@
   </head>
 
   <body>
-    
     <div class="container w-75">
-        <div class="col">
-          <div class="container my-4 p-4 rounded-container rounded-4">
-            
-            <div class="mb-5 d-flex flex-column">
-              <div class="d-flex flex-row gap-2">
-                <p><i class="bi bi-arrow-left"></i></p>
-                <h5 class="text-primary">
-                  <a href="/home">Back to profile</a>
-                </h5>
-              </div>
-              <div class="row">
-                <h3 class="mb-0">Select a report</h3>
-                <p class="text-body-tertiary">
-                  User: <%= user.firstName %> <%= user.lastName %>
-                </p>
-              </div>
+      <div class="col">
+        <div class="container my-4 p-4 rounded-container rounded-4">
+          <div class="mb-5 d-flex flex-column">
+            <div class="d-flex flex-row gap-2">
+              <p><i class="bi bi-arrow-left"></i></p>
+              <h5 class="text-primary">
+                <a href="/">Back to profile</a>
+              </h5>
             </div>
-      
-            <div class="container rooms-card">
-              <h3>Reports</h3>
-              <div class="row row-cols-3 gy-3">
-                <% missions.forEach((mission, index) => { %>
-      
-                <div class="col">
-                  <div class="card card-room not-clicked">
-                    <% missionUrgency = mission.mission.urgency === 'undefined' ? 'medium' : mission.mission.urgency.toLowerCase()  %>
-                    <% let highlightColor = missionUrgency === 'high' || missionUrgency === 'critical' ? '#dc3545' : '#0d6efd' %>
-                    
-                    <img src="images/drone-mission.jpg" class="card-img-top img-fluid" alt="Mission Image" />
-                    <div class="card-body" style="position: relative;" >
-                      <h5 class="card-title">Type: <%= mission.mission.type %></h5>
+            <div class="row">
+              <h3 class="mb-0">Select a team</h3>
+              <p class="text-body-tertiary">
+                User: <%= user.firstName %> <%= user.lastName %>
+              </p>
+            </div>
+          </div>
 
-                      <p class="price" style="color: <%= highlightColor %>;" >Urgency: <%= mission.mission.urgency %></p>
-                      <p class="card-text fs-5" style="position:absolute;bottom:1px;right:10px;" ><%= mission.mission.active ? '🟢' : '🔴' %></p>
-                      <!-- Link to a route that handles viewing or editing the mission -->
-                      <a href="/mission?id=<%= index %>" class="btn btn-primary" style="background-color: <%= highlightColor %>;border-color: <%= highlightColor %>;" >View Mission</a>
-                    </div>
+          <div class="container rooms-card">
+            <h3>Teams</h3>
+            <div class="row row-cols-3 gy-3">
+              <% teams.forEach((team, index) => { %>
+
+              <div class="col">
+                <div class="card card-room not-clicked">
+                  <img
+                    src="images/select-team.jpg"
+                    class="card-img-top img-fluid"
+                    alt="Mission Image"
+                  />
+                  <div class="card-body">
+                    <h5 class="card-title">Team: <%= team.team.teamName %></h5>
+                    <p class="price">Leader: <%= team.team.leaderName %></p>
+                    <!-- Link to a route that handles viewing or editing the mission -->
+                    <a href="/team?id=<%= index %>" class="btn btn-primary"
+                      >View team</a
+                    >
                   </div>
                 </div>
-      
-                <% }) %>
+              </div>
 
-                <!-- Add Missions Btn -->
+              <% }) %>
+
+              <!-- Add Mission Report Btn -->
               <div class="col">
                 <div class="card card-room text-bg-success" id="add-room-card">
                   <div class="card-image">
                     <img
-                      src="images/drone-mission.jpg"
+                      src="images/select-team.jpg"
                       class="card-img-top img-fluid blur"
                       alt="..."
                     />
                   </div>
                   <div class="card-body">
-                    <h5 class="card-title">Mission Name</h5>
-                    <p class="price">
-                      <span class="price-digit">Mission type: ###</span>
-                    </p>
-                    <a href="/"
-                      ><button class="btn btn-light">
-                        Add Mission
-                      </button></a
+                    <h5 class="card-title">Team Name: ###</h5>
+                    <p class="price">Leader: ###</p>
+                    <a href="#"
+                      ><button class="btn btn-light">Add Team</button></a
                     >
                   </div>
                 </div>
               </div>
-              <!-- Add Room Btn -->
-
-              </div>
+              <!-- Add Team Btn -->
             </div>
-      
           </div>
         </div>
       </div>
-      
+    </div>
 
     <!-- JQuery CDN -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>

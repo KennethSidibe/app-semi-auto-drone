@@ -1,0 +1,29 @@
+<div class="container">
+    <div class="mt-3">
+        <h3>Team</h3>
+        <p><strong>Team Name:</strong> <%= team.team.teamName %></p>
+    
+        <!-- Team Leader Details -->
+        <% if (team.team.teamLeader) { %>
+            <div>
+                <h4>Team Leader</h4>
+                <p><strong>Leader Name:</strong> <%= team.team.teamLeader.name %></p>
+                <p><strong>Leader Role:</strong> <%= team.team.teamLeader.role %></p>
+                <% let leaderStartedYear = team.team.teamLeader.startedAt ? new Date(team.team.teamLeader.startedAt.seconds).toDateString() : 'Unknown'; %>
+                <p><strong>Started At:</strong> since <%= leaderStartedYear %></p>
+            </div>
+        <% } %>
+    
+        <!-- Team Members Details -->
+        <h4>Team Members</h4>
+        <% team.team.members.forEach(member => { 
+            if (!member.leader) { %>
+                <div>
+                    <p><strong>Member Name:</strong> <%= member.name %></p>
+                    <p><strong>Member Role:</strong> <%= member.role %></p>
+                    <% let memberStartedYear = member.startedAt ? new Date(member.startedAt.seconds).toDateString() : 'Unknown'; %>
+                    <p><strong>Member Started At:</strong> since <%= memberStartedYear %></p>
+                </div>
+        <% }}) %>
+    </div>
+</div>
