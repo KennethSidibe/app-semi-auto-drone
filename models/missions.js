@@ -193,6 +193,35 @@ export default class Mission {
     
         return missionsArray; // Return the array of Mission objects
     }
+    export async function GetActiveMissionLocations() {
+        try {
+          const missionsRef = collection(db, "missions");
+          // Create a query against the collection, filtering for active missions
+          const q = queryFirestore(missionsRef, where("active", "==", true));
+      
+          const querySnapshot = await getDocs(q);
+          let activeMissionsLocations = [];
+      
+          querySnapshot.forEach((doc) => {
+            // Assuming each mission has a 'location' field stored as a GeoPoint
+            const missionData = doc.data();
+            if (missionData.location) {
+              // Convert Firestore GeoPoint to a more usable object if necessary
+              const location = { lat: missionData.location.latitude, lng: missionData.location.longitude };
+              activeMissionsLocations.push({
+                missionId: doc.id,
+                location: location,
+                // Include other mission details as needed
+              });
+            }
+          });
+      
+          return activeMissionsLocations;
+        } catch (error) {
+          console.error("Error fetching active mission locations: ", error);
+          return [];
+        }
+      }
     // READ
 
     async function checkIfMissionExists(missionId) {
@@ -240,6 +269,34 @@ export default class Mission {
         }
     }
     // DELETE
+
+    // Get random city location
+    function getRandomLocation() {
+        // Define the cities and their lat/long coordinates
+        const cities = [
+            { name: "Ottawa", coords: { lat: 45.4215, lng: -75.6972 } },
+            { name: "New York", coords: { lat: 40.7128, lng: -74.0060 } },
+            { name: "Montreal", coords: { lat: 45.5017, lng: -73.5673 } },
+            { name: "Toronto", coords: { lat: 43.6532, lng: -79.3832 } },
+            { name: "Ouagadougou", coords: { lat: 12.3714, lng: -1.5197 } },
+            { name: "Kinshasa", coords: { lat: -4.4419, lng: 15.2663 } },
+            { name: "New Delhi", coords: { lat: 28.6139, lng: 77.2090 } },
+            { name: "Abidjan", coords: { lat: 5.3599, lng: -4.0083 } },
+            { name: "Baghdad", coords: { lat: 33.3152, lng: 44.3661 } }
+        ];
+    
+        // Randomly select a city
+        const randomCity = cities[Math.floor(Math.random() * cities.length)];
+    
+        // Return the name and coordinates of the randomly selected city
+        return randomCity;
+    }
+    
+    // // Example usage:
+    // const location = getRandomLocation();
+    // console.log(`Randomly selected location: ${location.name} at latitude ${location.coords.lat} and longitude ${location.coords.lng}.`);
+    
+    // Get random city location
 
 /*
 let mission = {

@@ -1,0 +1,1 @@
+print('vehicle.armed = False');

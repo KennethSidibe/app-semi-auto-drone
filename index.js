@@ -3,6 +3,8 @@ import express, { query } from "express";
 import { dirname } from "path";
 import ejs from "ejs";
 import { fileURLToPath } from "url";
+import fs from 'fs';
+import { createReadStream } from 'fs';
 import bcrypt from "bcrypt";
 import { error, log } from "console";
 import { initializeApp } from "firebase/app";
@@ -22,7 +24,7 @@ import MissionReport from "./models/missions-report.js";
 import { InsertMissionReport, GetMissionReportById, getAllMissionReports, UpdateMissionReport, DeleteMissionReport, MissionReportGenerator } from "./models/missions-report.js";
 
 import Mission from "./models/missions.js";
-import { InsertMission, GetMissionById, getAllMissions, UpdateMission, DeleteMission } from "./models/missions.js";
+import { InsertMission, GetMissionById, GetActiveMissionLocations, getAllMissions, UpdateMission, DeleteMission } from "./models/missions.js";
 
 import Team from "./models/teams.js";
 import { InsertTeam, GetTeamById, UpdateTeam, DeleteTeam, createMembersFromFormData, teamGenerator, getAllTeams } from "./models/teams.js";
@@ -69,7 +71,13 @@ const auth = getAuth(firebaseApp);
 
 const app = express();
 const server = createServer(app); 
-const io = new Server(server);
+const io = new Server(server,{
+  cors: {
+    origin: "http://localhost:3200", // Or '*' to allow all origins
+    methods: ["GET", "POST"],
+  }
+}
+);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
@@ -82,7 +90,16 @@ server.listen(port, (req, res) => {
 // ---------------- ROUTES ---------------------
 
 app.get("/", async (req, res) => {
-  res.render("home.ejs");
+  const activeMissionsLocations = await GetActiveMissionLocations();
+  res.render("home.ejs", {
+    activeMissionsLocations:activeMissionsLocations
+  });
+});
+
+// 
+
+app.get('/live-drone', async(req, res) => {
+  res.render('home-drone.ejs');
 });
 
 // TEST MISSIONS REPORTS CRUD
@@ -951,18 +968,46 @@ app.post('/register', async(req, res) => {
 
 // ---------------- SOCKET ---------------------
 
+const filePath = 'lidarReading.txt';
+
 io.on('connection', function(socket){
   console.log('User connected');
 
+  socket.on('droneConnected', function(data){
+    console.log('Drone just connected');
+    io.emit('droneConnected', data);
+ });
+ socket.on('newLidarReading', (lidarReading) => {
+  console.log('Received lidar reading:', lidarReading);
+  // Broadcast this reading to all connected user clients
+  io.emit('updateLidarReading', lidarReading);
+});
   socket.on('disconnect', function() {
     console.log('User disconnected');
   });
+
 });
 
 // ---------------- SOCKET ---------------------
 
 
 // **************** METHODS ****************
+
+function readLastLineOfFile(file, callback) {
+  let stream = createReadStream(file, { flags: 'r', encoding: 'utf-8' });
+  let data = '';
+  let lastLine = '';
+  
+  stream.on('data', function(chunk) {
+      data += chunk;
+      let lines = data.split('\n');
+      lastLine = lines[lines.length - 1]; // Get the second to last line, as the last line may be incomplete
+  });
+  
+  stream.on('end', function() {
+      callback(lastLine);
+  });
+}
 
 async function doesEmailExists(email) {
   try {
